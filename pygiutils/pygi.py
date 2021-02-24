@@ -1,4 +1,5 @@
 from dotenv import load_dotenv
+from github import Github
 import git
 import sys
 import os
@@ -21,8 +22,6 @@ def clone(uri: str, target: str, token: str) -> None:
     remote = f"https://{token}:x-oauth-basic@{uri}.git"
     try:
         git.Repo.clone_from(remote, target)
-    except GitError as e:
-        return e
     except:
         return sys.exc_info()
 
@@ -33,9 +32,9 @@ def new_branch(repo: str, branch: str) -> None:
     repo: Local repo name
     branch: Name of new branch
     """
-    repo = git.Repo(local_repo)
+    repo = git.Repo(repo)
     try:
-        new_branch = repo.create_head(branch_name)
+        new_branch = repo.create_head(branch)
     except:
         return ()
     new_branch.checkout()
@@ -46,7 +45,7 @@ def update_file(filename: str, content: str) -> None:
     Please provide the ENTIRE file contents each time this
     function is called
 
-    filename: Name of file to chagne, preffered full path if possible
+    filename: Path of file to change (starting from cwd or full path)
     content: New contents of the file in string format
     """
     with open(filename, "w") as f:
@@ -71,5 +70,21 @@ def add_commit(repo: str, changes: list, message: str) -> None:
     repo.git.push("--set-upstream", repo.remote("origin"), repo.head.ref)
 
 
-def create_pr():
-    pass
+def create_pr(
+    repo: str, dir: str, token: str, title: str, body: str, head: str, base: str
+) -> None:
+    """Create a new pull request
+
+    repo: Repository in User/Repository format
+    dir: local directory name
+    token: Github access token
+    title: Title of new pull request
+    body: Body of pull request
+    head: Branch to merge (dev -> main, this is dev)
+    base: Branch to merge new branch into (dev -> main, this is main)
+    """
+    os.chdir(dir)
+    g = Github(token)
+    repo = g.get_repo(repo)
+    repo.create_pull(title=title, body=body, head=head, base=base)
+    os.chdir('../')
