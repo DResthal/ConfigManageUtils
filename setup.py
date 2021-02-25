@@ -1,7 +1,7 @@
 from setuptools import find_packages, setup
 
 setup(
-    name='PyManage',
+    name='PyManageUtils',
     packages=find_packages(include=['git']),
     version='0.1.0',
     description='Python Git/Github Utilities',
