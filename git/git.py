@@ -40,19 +40,6 @@ def new_branch(repo: str, branch: str) -> None:
     new_branch.checkout()
 
 
-def update_file(filename: str, content: str) -> None:
-    """Overwrite the entire file contents with new content
-    Please provide the ENTIRE file contents each time this
-    function is called
-
-    filename: Path of file to change (starting from cwd or full path)
-    content: New contents of the file in string format
-    """
-    with open(filename, "w") as f:
-        f.write(content)
-        f.close()
-
-
 def add_commit(repo: str, changes: list, message: str) -> None:
     """Stage all changes and commit them in one single step.
 
@@ -87,4 +74,4 @@ def create_pr(
     g = Github(token)
     repo = g.get_repo(repo)
     repo.create_pull(title=title, body=body, head=head, base=base)
-    os.chdir('../')
+    os.chdir("../")
