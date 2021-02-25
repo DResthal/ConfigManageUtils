@@ -1,8 +1,8 @@
 from setuptools import find_packages, setup
 
 setup(
-    name='PyGi',
-    packages=find_packages(include=['pygi']),
+    name='PyManage',
+    packages=find_packages(include=['git']),
     version='0.1.0',
     description='Python Git/Github Utilities',
     author='DralrinResthal',
