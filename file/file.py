@@ -1,6 +1,7 @@
 import json
 import ruamel.yaml
 import sys
+import distutils.util.strtobool as strtobool
 
 
 def read_yaml(filename: str) -> None:
@@ -42,11 +43,17 @@ def file_write(payload: str, filename: str) -> None:
     '''
     yaml = ruamel.yaml.YAML()
     try:
-        jsn = json.loads(payload, object_pairs_hook=ruamel.yaml.comments.CommentedMap)
+        payload = json.loads(payload, object_pairs_hook=ruamel.yaml.comments.CommentedMap)
     except TypeError as e:
         return(f'Error parsing JSON \n\n{e}')
     except:
         return(f"Unknown error parsing JSON. {sys.exc_info()}")
+
+    if type(payload['secret']) == str:
+        payload['secret'] = strtobool(payload['secret'])
+
+    if jsn['secret']:
+        payload = kms_encrypt(json.dumps(payload))
 
     yaml.explicit_start = True
     write_file = open(filename, 'w')
@@ -61,6 +68,11 @@ def save_newfile():
     pass
 
 
-def encrypt():
+def kms_encrypt(payload: str) -> str:
+    '''Sends payload to AWS KMS for encryption
+    Returns encrypted payload string
+
+    payload: JSON string
+    '''
     # Check if new config is set to secret
-    pass
+    return(payload)
