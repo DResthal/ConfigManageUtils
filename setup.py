@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='PyManageUtils',
-    packages=find_packages(include=['git']),
+    packages=find_packages(include=['git', 'file']),
     version='0.1.0',
     description='Python Git/Github Utilities',
     author='DralrinResthal',
@@ -10,7 +10,8 @@ setup(
     install_requires=[
         'GitPython>=3.1.13',
         'PyGithub>=1.54.1',
-        'python-dotenv>=0.15.0'
+        'python-dotenv>=0.15.0',
+        'ruamel.yaml==0.16.12'
     ],
     extras_require={
         'dev': [
