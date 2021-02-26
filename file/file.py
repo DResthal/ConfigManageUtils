@@ -1,7 +1,7 @@
 import json
 import ruamel.yaml
 import sys
-import distutils.util.strtobool as strtobool
+from distutils.util import strtobool
 
 
 def read_yaml(filename: str) -> None:
@@ -52,8 +52,9 @@ def file_write(payload: str, filename: str) -> None:
     if type(payload['secret']) == str:
         payload['secret'] = strtobool(payload['secret'])
 
-    if jsn['secret']:
-        payload = kms_encrypt(json.dumps(payload))
+    for i in payload:
+        if i['secret']:
+            payload = kms_encrypt(json.dumps(payload))
 
     yaml.explicit_start = True
     write_file = open(filename, 'w')
