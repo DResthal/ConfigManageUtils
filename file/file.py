@@ -33,8 +33,9 @@ def read_yaml(filename: str) -> None:
         return message
 
 
-def convert_json(payload: str, filename: str) -> None:
-    '''Convert JSON payload to yaml and write to filename
+def file_write(payload: str, filename: str) -> None:
+    '''Convert JSON payload to yaml and write to filename.
+    If JSON contains 'secret':True then send to KMS for encryption.
 
     payload: JSON string to convert
     filename: Filename to write yaml to
@@ -60,6 +61,6 @@ def save_newfile():
     pass
 
 
-def check_secret():
+def encrypt():
     # Check if new config is set to secret
     pass
