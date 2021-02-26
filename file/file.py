@@ -7,7 +7,7 @@ def read_yaml(filename: str) -> None:
     """Reads yaml file which is converted to
     json by ruamel.yaml natively.
 
-    filename: String filename to convert
+    filename: Filename to convert
     """
     yaml = ruamel.yaml.YAML(typ="safe")
     try:
@@ -36,7 +36,7 @@ def read_yaml(filename: str) -> None:
 def convert_json(payload: str, filename: str) -> None:
     '''Convert JSON payload to yaml and write to filename
 
-    payload: JSON String to convert
+    payload: JSON string to convert
     filename: Filename to write yaml to
     '''
     yaml = ruamel.yaml.YAML()
