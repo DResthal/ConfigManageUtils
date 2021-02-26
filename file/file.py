@@ -49,13 +49,6 @@ def file_write(payload: str, filename: str) -> None:
     except:
         return(f"Unknown error parsing JSON. {sys.exc_info()}")
 
-    if type(payload['secret']) == str:
-        payload['secret'] = strtobool(payload['secret'])
-
-    for i in payload:
-        if i['secret']:
-            payload = kms_encrypt(json.dumps(payload))
-
     yaml.explicit_start = True
     write_file = open(filename, 'w')
     try:
@@ -68,12 +61,22 @@ def save_newfile():
     # Save new yaml to file
     pass
 
+def check_secret(data: dict) -> dict:
+    '''Walks dict tree and checks for key "secret"
+    If secret : True, returns dict, pass if False
 
-def kms_encrypt(payload: str) -> str:
-    '''Sends payload to AWS KMS for encryption
-    Returns encrypted payload string
+    data: Python dictionary object
+    '''
+    for key in data.keys():
+        for k, v in data[key].items():
+            if k == 'secret' and v == True:
+                print(data[key]['value'])
+
+
+def kms_encrypt(data: dict) -> dict:
+    '''Sends value to AWS KMS for encryption
+    Returns encrypted value
 
     payload: JSON string
     '''
-    # Check if new config is set to secret
-    return(payload)
+    print(data)
