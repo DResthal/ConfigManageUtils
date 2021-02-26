@@ -58,7 +58,7 @@ def file_write(payload: str, filename: str) -> None:
     yaml.explicit_start = True
     write_file = open(filename, 'w')
     try:
-        yaml.dump(jsn, write_file)
+        yaml.dump(payload, write_file)
     except:
         return(f"Error saving yaml file. {sys.exc_info()}")
 
