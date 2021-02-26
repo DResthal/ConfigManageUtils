@@ -29,13 +29,30 @@ def read_yaml(filename: str) -> None:
     except TypeError as e:
         return e
     except:
-        message = f"Unknown Error parsing {filename} to json. \n\n {sys.exc_info()}"
+        message = f"Unknown Error parsing {filename} to json. {sys.exc_info()}"
         return message
 
 
-def convert_json():
-    # Convert JSON to yaml
-    pass
+def convert_json(payload: str, filename: str) -> None:
+    '''Convert JSON payload to yaml and write to filename
+
+    payload: JSON String to convert
+    filename: Filename to write yaml to
+    '''
+    yaml = ruamel.yaml.YAML()
+    try:
+        jsn = json.loads(payload, object_pairs_hook=ruamel.yaml.comments.CommentedMap)
+    except TypeError as e:
+        return(f'Error parsing JSON \n\n{e}')
+    except:
+        return(f"Unknown error parsing JSON. {sys.exc_info()}")
+
+    yaml.explicit_start = True
+    test = open(filename, 'w')
+    try:
+        yaml.dump(jsn, test)
+    except:
+        return(f"Error saving yaml file. {sys.exc_info()}")
 
 
 def save_newfile():
