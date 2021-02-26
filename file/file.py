@@ -48,9 +48,9 @@ def convert_json(payload: str, filename: str) -> None:
         return(f"Unknown error parsing JSON. {sys.exc_info()}")
 
     yaml.explicit_start = True
-    test = open(filename, 'w')
+    write_file = open(filename, 'w')
     try:
-        yaml.dump(jsn, test)
+        yaml.dump(jsn, write_file)
     except:
         return(f"Error saving yaml file. {sys.exc_info()}")
 
