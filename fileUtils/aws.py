@@ -16,7 +16,7 @@ def encrypt(data: str) -> str:
 
     Returns base64 encoded string
     """
-    data = bytes(data.encode('ascii'))
+    data = bytes(data.encode("ascii"))
     kms = boto3.client("kms")
     res = kms.encrypt(
         KeyId=os.getenv("KEY_ID"),
@@ -34,7 +34,7 @@ def decrypt(data: str) -> str:
 
     Returns base64 encoded string
     """
-    data = bytes(data.encode('ascii'))
+    data = bytes(data.encode("ascii"))
     kms = boto3.client("kms")
     res = kms.decrypt(
         CiphertextBlob=data,
@@ -43,3 +43,22 @@ def decrypt(data: str) -> str:
     )
 
     return base64.b64encode(res["Plaintext"])
+
+
+def store(data: str) -> None:
+    """Stores JSON string key:values in parameter store
+
+    data: JSON String of data to store
+    """
+    ssm = boto3.client("ssm")
+    for key in data.keys():
+
+        res = ssm.put_parameter(
+            Name=key,
+            Description=data[key]["comment"],
+            Value=data[key]["comment"],
+            Type="SecureString",
+            KeyId=os.getenv("KEY_ID"),
+            Overwrite=True,
+        )
+        print(res)
