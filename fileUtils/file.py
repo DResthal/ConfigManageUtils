@@ -35,7 +35,7 @@ def read_yaml(filename: str) -> None:
         return message
 
 
-def file_write(payload: str) -> None:
+def convert_json(payload: str) -> None:
     """Convert JSON payload to ruamel.yaml object
     If JSON contains 'secret':True then encrypt relevant value
 
@@ -52,9 +52,12 @@ def file_write(payload: str) -> None:
         return f"Unknown error parsing JSON. {sys.exc_info()}"
 
     try:
-        check_secret(payload)
+        encrypted_payload = check_secret(payload)
     except:
         return sys.exc_info()
+
+    try:
+        write_file()
 
 
 def check_secret(data: dict) -> dict:
