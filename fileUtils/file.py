@@ -55,9 +55,9 @@ def process_json(payload: str) -> str:
     except:
         return f"Unknown error parsing JSON. {sys.exc_info()}"
 
-    decrypted_payload = check_secret(payload)
+    encrypted_data = check_secret(payload)
 
-    return decrypted_payload
+    return encrypted_data
 
 
 # Check for secret flag.
