@@ -82,13 +82,3 @@ def write_file(filename: str, yaml: ruamel.YAML()) -> None:
         yaml.dump(payload, write_file)
     except:
         return f"Error saving yaml file. {sys.exc_info()}"
-
-
-def kms_encrypt(data: dict) -> dict:
-    """Sends value to AWS KMS for encryption
-    Returns encrypted value
-
-    payload: JSON string
-    """
-    res = aws.encrypt(bytes(data.encode("ascii")))
-    return res
