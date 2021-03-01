@@ -4,8 +4,10 @@ import sys
 from distutils.util import strtobool
 import aws
 
-
-def read_yaml(filename: str) -> None:
+# Read's yaml file.
+# Decrypts yml
+# Returns JSON str
+def read_yaml(filename: str) -> str:
     """Reads yaml file which is converted to
     json by ruamel.yaml natively.
 
@@ -26,22 +28,24 @@ def read_yaml(filename: str) -> None:
         return f"{sys.exc_info()}"
 
     try:
-        content = json.dumps(content)
-        return content
+        unencrypted_content = check_secret(content, decrypt=True)
+        json_string = json.dumps(unencrypted_content)
+        return json_string
     except TypeError as e:
         return e
     except:
-        message = f"Unknown Error parsing {filename} to json. {sys.exc_info()}"
-        return message
+        return(f"Unknown Error parsing {filename} to json. {sys.exc_info()}")
 
 
-def convert_json(payload: str) -> None:
+# Pre-process incoming JSON.
+# Send through encryption check.
+# Return encrypted JSON dict for writing to yml file.
+def process_json(payload: str) -> str:
     """Convert JSON payload to ruamel.yaml object
     If JSON contains 'secret':True then encrypt relevant value
 
     payload: JSON string to convert
     """
-    yaml = ruamel.yaml.YAML()
     try:
         payload = json.loads(
             payload, object_pairs_hook=ruamel.yaml.comments.CommentedMap
@@ -51,16 +55,15 @@ def convert_json(payload: str) -> None:
     except:
         return f"Unknown error parsing JSON. {sys.exc_info()}"
 
-    try:
-        encrypted_payload = check_secret(payload)
-    except:
-        return sys.exc_info()
+    decrypted_payload = check_secret(payload)
 
-    try:
-        write_file()
+    return decrypted_payload
 
 
-def check_secret(data: dict) -> dict:
+# Check for secret flag.
+# Encrypt/Decrypt secret value per decrypt flag.
+# Return entire dict.
+def check_secret(data: dict, decrypt: bool=False) -> dict:
     """Walks dict tree and checks for key "secret"
     If secret : True, returns dict, pass if False
 
@@ -69,13 +72,21 @@ def check_secret(data: dict) -> dict:
     for key in data.keys():
         for k, v in data[key].items():
             if k == "secret" and v == True:
-                data[key]["value"] = aws.encrypt(
-                    data[key]['value']
-                )
+                if decrypt:
+                    data[key]['value'] = aws.decrypt(data[key]['value'])
+                else:
+                    data[key]["value"] = aws.encrypt(
+                        data[key]['value']
+                        )
     return data
 
 
-def write_file(filename: str, yaml: ruamel.YAML()) -> None:
+# Convert JSON to yaml and write to file.
+# Conversion cannot be done outside of this as ruamel.yaml's dump
+# function requires a stream to convert to yaml, and that stream
+# is the outfile.
+def write_file(filename: str, payload: str) -> None:
+    yaml = ruamel.yaml.YAML()
     yaml.explicit_start = True
     write_file = open(filename, "w")
     try:
