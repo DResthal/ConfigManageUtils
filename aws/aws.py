@@ -8,18 +8,37 @@ load_dotenv()
 # Data as read from a txt file
 # data = bytes(open('raw.txt', 'r').read().encode(encoding="ascii"))
 
-def encrypt(data):
-    kms = boto3.client('kms')
+
+def encrypt(data: str) -> str:
+    """Encrypts data with AWS KMS
+    Accepts a bytes string from ascii
+
+    data: Bytes string to encrypt
+    """
+    kms = boto3.client("kms")
     res = kms.encrypt(
-        KeyId=os.getenv('KEY_ID'),
+        KeyId=os.getenv("KEY_ID"),
         Plaintext=data,
-        EncryptionAlgorithm="SYMMETRIC_DEFAULT"
+        EncryptionAlgorithm="SYMMETRIC_DEFAULT",
     )
 
-    return(base64.b64encode(res['CiphertextBlob']))
+    return base64.b64encode(res["CiphertextBlob"])
 
-def write_out(res):
-    with open('encrypted.txt', 'w') as f:
-        f.write(res.decode('ascii'))
+
+def decrypt(data: str) -> str:
+    """Decrypts string using AWS KMS"""
+    kms = boto3.client("kms")
+    res = kms.decrypt(
+        CiphertextBlob=data,
+        KeyId=os.getenv("KEY_ID"),
+        EncryptionAlgorithm="SYMMETRIC_DEFAULT",
+    )
+
+    return base64.b64encode(res["Plaintext"])
+
+
+def write_out(data: str):
+    with open("encrypted.txt", "w") as f:
+        f.write(data.decode("ascii"))
         f.close()
-    print('Written to file.')
+    print("Written to file.")
