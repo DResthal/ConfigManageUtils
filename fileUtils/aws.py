@@ -11,13 +11,12 @@ load_dotenv()
 
 def encrypt(data: str) -> str:
     """Encrypts string data with AWS KMS
-    Accepts a bytes string
 
-    data: Bytes string to encrypt
+    data: String to encrypt
 
     Returns base64 encoded string
-    decode to ascii
     """
+    data = bytes(data.encode('ascii'))
     kms = boto3.client("kms")
     res = kms.encrypt(
         KeyId=os.getenv("KEY_ID"),
@@ -30,13 +29,12 @@ def encrypt(data: str) -> str:
 
 def decrypt(data: str) -> str:
     """Decrypts string data using AWS KMS
-    Accepts a bytes string
 
-    data: Bytes string to decrypt
+    data: String to encrypt
 
     Returns base64 encoded string
-    decode to ascii
     """
+    data = bytes(data.encode('ascii'))
     kms = boto3.client("kms")
     res = kms.decrypt(
         CiphertextBlob=data,

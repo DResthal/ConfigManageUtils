@@ -2,6 +2,7 @@ import json
 import ruamel.yaml
 import sys
 from distutils.util import strtobool
+import aws
 
 
 def read_yaml(filename: str) -> None:
@@ -34,12 +35,11 @@ def read_yaml(filename: str) -> None:
         return message
 
 
-def file_write(payload: str, filename: str) -> None:
-    """Convert JSON payload to yaml and write to filename.
-    If JSON contains 'secret':True then send to KMS for encryption.
+def file_write(payload: str) -> None:
+    """Convert JSON payload to ruamel.yaml object
+    If JSON contains 'secret':True then encrypt relevant value
 
     payload: JSON string to convert
-    filename: Filename to write yaml to
     """
     yaml = ruamel.yaml.YAML()
     try:
@@ -51,17 +51,10 @@ def file_write(payload: str, filename: str) -> None:
     except:
         return f"Unknown error parsing JSON. {sys.exc_info()}"
 
-    yaml.explicit_start = True
-    write_file = open(filename, "w")
     try:
-        yaml.dump(payload, write_file)
+        check_secret(payload)
     except:
-        return f"Error saving yaml file. {sys.exc_info()}"
-
-
-def save_newfile():
-    # Save new yaml to file
-    pass
+        return sys.exc_info()
 
 
 def check_secret(data: dict) -> dict:
@@ -73,7 +66,19 @@ def check_secret(data: dict) -> dict:
     for key in data.keys():
         for k, v in data[key].items():
             if k == "secret" and v == True:
-                print(data[key]["value"])
+                data[key]["value"] = aws.encrypt(
+                    data[key]['value']
+                )
+    return data
+
+
+def write_file(filename: str, yaml: ruamel.YAML()) -> None:
+    yaml.explicit_start = True
+    write_file = open(filename, "w")
+    try:
+        yaml.dump(payload, write_file)
+    except:
+        return f"Error saving yaml file. {sys.exc_info()}"
 
 
 def kms_encrypt(data: dict) -> dict:
@@ -82,4 +87,5 @@ def kms_encrypt(data: dict) -> dict:
 
     payload: JSON string
     """
-    print(data)
+    res = aws.encrypt(bytes(data.encode("ascii")))
+    return res
