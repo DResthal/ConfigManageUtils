@@ -10,7 +10,7 @@ load_dotenv()
 
 
 def encrypt(data: str) -> str:
-    """Encrypts data with AWS KMS
+    """Encrypts string data with AWS KMS
     Accepts a bytes string
 
     data: Bytes string to encrypt
@@ -29,7 +29,7 @@ def encrypt(data: str) -> str:
 
 
 def decrypt(data: str) -> str:
-    """Decrypts string using AWS KMS
+    """Decrypts string data using AWS KMS
     Accepts a bytes string
 
     data: Bytes string to decrypt
