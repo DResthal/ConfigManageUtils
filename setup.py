@@ -11,7 +11,8 @@ setup(
         'GitPython>=3.1.13',
         'PyGithub>=1.54.1',
         'python-dotenv>=0.15.0',
-        'ruamel.yaml==0.16.12'
+        'ruamel.yaml==0.16.12',
+        'boto3==1.17.17',
     ],
     extras_require={
         'dev': [
