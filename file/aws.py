@@ -11,9 +11,12 @@ load_dotenv()
 
 def encrypt(data: str) -> str:
     """Encrypts data with AWS KMS
-    Accepts a bytes string from ascii
+    Accepts a bytes string
 
     data: Bytes string to encrypt
+
+    Returns base64 encoded string
+    decode to ascii
     """
     kms = boto3.client("kms")
     res = kms.encrypt(
@@ -26,7 +29,14 @@ def encrypt(data: str) -> str:
 
 
 def decrypt(data: str) -> str:
-    """Decrypts string using AWS KMS"""
+    """Decrypts string using AWS KMS
+    Accepts a bytes string
+
+    data: Bytes string to decrypt
+
+    Returns base64 encoded string
+    decode to ascii
+    """
     kms = boto3.client("kms")
     res = kms.decrypt(
         CiphertextBlob=data,
@@ -35,10 +45,3 @@ def decrypt(data: str) -> str:
     )
 
     return base64.b64encode(res["Plaintext"])
-
-
-def write_out(data: str):
-    with open("encrypted.txt", "w") as f:
-        f.write(data.decode("ascii"))
-        f.close()
-    print("Written to file.")
