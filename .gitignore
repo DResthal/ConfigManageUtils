@@ -126,4 +126,10 @@ venv.bak/
 dmypy.json
 
 # Pyre type checker
-.pyre/
+.pyre
+
+# Project files
+.yml
+.yaml
+raw.txt
+encrypted.txt
