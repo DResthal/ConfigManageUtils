@@ -55,17 +55,14 @@ def check_secret(data: str, decrypt: bool=False) -> str:
         for k, v in data[key].items():
             if k == "secret" and v == True:
                 data = data
-                '''
                 if decrypt:
                     data[key]['value'] = aws.decrypt(data[key]['value'])
                 else:
                     data[key]["value"] = aws.encrypt(
                         data[key]['value']
                         )
-                '''
 
     data = json.dumps(data)
-
     return data
 
 
@@ -73,11 +70,22 @@ def check_secret(data: str, decrypt: bool=False) -> str:
 # Conversion cannot be done outside of this as ruamel.yaml's dump
 # function requires a stream to convert to yaml, and that stream
 # is the outfile.
-def write_file(filename: str, payload: str) -> None:
-    yaml = ruamel.yaml.YAML()
-    yaml.explicit_start = True
-    write_file = open(filename, "w")
+def write_file(data: str, filename: str) -> None:
+    '''Saves a JSON string to a yml file.
+
+    data: JSON String to save.
+    filename: Name of file to save to.
+    '''
     try:
-        yaml.dump(payload, write_file)
+        data = json.loads(data)
+    except json.decoder.JSONDecodeError as e:
+        return f"Invalid JSON: {e}"
+
+    yaml = ruamel.yaml.YAML()
+    # yaml.explicit_start = True
+    write_file = open(filename, "w")
+
+    try:
+        yaml.dump(data, write_file)
     except:
         return f"Error saving yaml file. {sys.exc_info()}"
