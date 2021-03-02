@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from github import Github
+from git import Actor
 import git
 import sys
 import os
@@ -40,19 +41,29 @@ def new_branch(repo: str, branch: str) -> None:
     new_branch.checkout()
 
 
-def add_commit(repo: str, changes: list, message: str) -> None:
+def add_commit(repo: str,
+               changes: list,
+               message: str,
+               name: str,
+               email: str
+               ) -> None:
     """Stage all changes and commit them in one single step.
 
     repo: local name of repository
     changes: List of all filenames to stage
     message: Commit message string
+    name: Author name string
+    email: Author email string
     """
     # Initialize repository
     repo = git.Repo(repo)
     # Stage chagnes
     repo.index.add(changes)
+
+    author = Actor(name, email)
+
     # Commit staged changes
-    repo.index.commit(message)
+    repo.index.commit(message, author=author)
     # Push to remote
     repo.git.push("--set-upstream", repo.remote("origin"), repo.head.ref)
 
