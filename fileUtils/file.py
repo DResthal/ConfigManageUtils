@@ -2,7 +2,7 @@ import json
 import ruamel.yaml
 import sys
 from distutils.util import strtobool
-import aws
+from . import aws
 
 # Read's yaml file.
 # Decrypts yml
@@ -28,56 +28,44 @@ def read_yaml(filename: str) -> str:
         return f"{sys.exc_info()}"
 
     try:
-        unencrypted_content = check_secret(content, decrypt=True)
-        json_string = json.dumps(unencrypted_content)
+        json_string = json.dumps(content)
         return json_string
     except TypeError as e:
         return e
     except:
         return(f"Unknown Error parsing {filename} to json. {sys.exc_info()}")
 
-
-# Pre-process incoming JSON.
-# Send through encryption check.
-# Return encrypted JSON dict for writing to yml file.
-def process_json(payload: str) -> str:
-    """Convert JSON payload to ruamel.yaml object
-    If JSON contains 'secret':True then encrypt relevant value
-
-    payload: JSON string to convert
-    """
-    try:
-        payload = json.loads(
-            payload, object_pairs_hook=ruamel.yaml.comments.CommentedMap
-        )
-    except TypeError as e:
-        return f"Error parsing JSON \n\n{e}"
-    except:
-        return f"Unknown error parsing JSON. {sys.exc_info()}"
-
-    encrypted_data = check_secret(payload)
-
-    return encrypted_data
-
-
 # Check for secret flag.
 # Encrypt/Decrypt secret value per decrypt flag.
 # Return entire dict.
-def check_secret(data: dict, decrypt: bool=False) -> dict:
-    """Walks dict tree and checks for key "secret"
-    If secret : True, returns dict, pass if False
+def check_secret(data: str, decrypt: bool=False) -> str:
+    """Checks for secret flag, encrypts value if secret True
 
-    data: Python dictionary object
+    data: JSON String to check
+    decrypt: Boolean flag to decrypt instead of encrypting
+    Returns JSON String
     """
+    try:
+        data = json.loads(data)
+    except json.decoder.JSONDecodeError as e:
+        return f"Invalid JSON: {e}"
+
+    # Check for secret flag, encrypt/decrypt as necessary
     for key in data.keys():
         for k, v in data[key].items():
             if k == "secret" and v == True:
+                data = data
+                '''
                 if decrypt:
                     data[key]['value'] = aws.decrypt(data[key]['value'])
                 else:
                     data[key]["value"] = aws.encrypt(
                         data[key]['value']
                         )
+                '''
+
+    data = json.dumps(data)
+
     return data
 
 
