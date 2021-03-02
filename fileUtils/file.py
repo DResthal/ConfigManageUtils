@@ -33,12 +33,13 @@ def read_yaml(filename: str) -> str:
     except TypeError as e:
         return e
     except:
-        return(f"Unknown Error parsing {filename} to json. {sys.exc_info()}")
+        return f"Unknown Error parsing {filename} to json. {sys.exc_info()}"
+
 
 # Check for secret flag.
 # Encrypt/Decrypt secret value per decrypt flag.
 # Return entire dict.
-def check_secret(data: str, decrypt: bool=False) -> str:
+def check_secret(data: str, decrypt: bool = False) -> str:
     """Checks for secret flag, encrypts value if secret True
 
     data: JSON String to check
@@ -56,11 +57,9 @@ def check_secret(data: str, decrypt: bool=False) -> str:
             if k == "secret" and v == True:
                 data = data
                 if decrypt:
-                    data[key]['value'] = aws.decrypt(data[key]['value'])
+                    data[key]["value"] = aws.decrypt(data[key]["value"])
                 else:
-                    data[key]["value"] = aws.encrypt(
-                        data[key]['value']
-                        )
+                    data[key]["value"] = aws.encrypt(data[key]["value"])
 
     data = json.dumps(data)
     return data
@@ -71,11 +70,11 @@ def check_secret(data: str, decrypt: bool=False) -> str:
 # function requires a stream to convert to yaml, and that stream
 # is the outfile.
 def write_file(data: str, filename: str) -> None:
-    '''Saves a JSON string to a yml file.
+    """Saves a JSON string to a yml file.
 
     data: JSON String to save.
     filename: Name of file to save to.
-    '''
+    """
     try:
         data = json.loads(data)
     except json.decoder.JSONDecodeError as e:

@@ -25,7 +25,7 @@ def encrypt(data: str) -> str:
         EncryptionAlgorithm="SYMMETRIC_DEFAULT",
     )
 
-    return base64.b64encode(res["CiphertextBlob"]).decode('ascii')
+    return base64.b64encode(res["CiphertextBlob"]).decode("ascii")
 
 
 def decrypt(data: str) -> str:
@@ -42,8 +42,7 @@ def decrypt(data: str) -> str:
         EncryptionAlgorithm="SYMMETRIC_DEFAULT",
     )
 
-    return res['Plaintext'].decode('ascii')
-
+    return res["Plaintext"].decode("ascii")
 
 
 def store(data: str) -> None:
@@ -59,7 +58,7 @@ def store(data: str) -> None:
             Name=key,
             Description=data[key]["comment"],
             Value=data[key]["value"],
-            Type="SecureString" if data[key]['secret'] else "String",
+            Type="SecureString" if data[key]["secret"] else "String",
             KeyId=os.getenv("KEY_ID"),
             Overwrite=True,
         )
