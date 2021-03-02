@@ -50,14 +50,13 @@ def store(data: str) -> dict:
     """Stores JSON string key:values in parameter store
 
     data: JSON String of data to store
-    
+
     Returns AWS SSM response as dict
     """
 
     data = json.loads(file.check_secret(data, decrypt=True))
     ssm = boto3.client("ssm")
     for key in data.keys():
-
         if data[key]['secret']:
             res = ssm.put_parameter(
                 Name=key,
@@ -75,5 +74,4 @@ def store(data: str) -> dict:
                 Type="String",
                 Overwrite=True,
             )
-
-        return res
+        yield(res)
