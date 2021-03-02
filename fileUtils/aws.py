@@ -2,6 +2,7 @@ import boto3
 from dotenv import load_dotenv
 import os
 import base64
+import json
 from . import file
 
 load_dotenv()
@@ -45,22 +46,34 @@ def decrypt(data: str) -> str:
     return res["Plaintext"].decode("ascii")
 
 
-def store(data: str) -> None:
+def store(data: str) -> dict:
     """Stores JSON string key:values in parameter store
 
     data: JSON String of data to store
+    
+    Returns AWS SSM response as dict
     """
-    data = file.check_secret(data, decrypt=True)
+
+    data = json.loads(file.check_secret(data, decrypt=True))
     ssm = boto3.client("ssm")
     for key in data.keys():
 
-        res = ssm.put_parameter(
-            Name=key,
-            Description=data[key]["comment"],
-            Value=data[key]["value"],
-            Type="SecureString" if data[key]["secret"] else "String",
-            KeyId=os.getenv("KEY_ID"),
-            Overwrite=True,
-        )
+        if data[key]['secret']:
+            res = ssm.put_parameter(
+                Name=key,
+                Description=data[key]["comment"],
+                Value=data[key]["value"],
+                Type="SecureString",
+                KeyId=os.getenv("KEY_ID"),
+                Overwrite=True,
+            )
+        else:
+            res = ssm.put_parameter(
+                Name=key,
+                Description=data[key]["comment"],
+                Value=data[key]["value"],
+                Type="String",
+                Overwrite=True,
+            )
 
-        print(res)
+        return res
