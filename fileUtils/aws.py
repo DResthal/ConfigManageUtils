@@ -2,6 +2,7 @@ import boto3
 from dotenv import load_dotenv
 import os
 import base64
+from . import file
 
 load_dotenv()
 
@@ -24,17 +25,16 @@ def encrypt(data: str) -> str:
         EncryptionAlgorithm="SYMMETRIC_DEFAULT",
     )
 
-    return base64.b64encode(res["CiphertextBlob"])
+    return base64.b64encode(res["CiphertextBlob"]).decode('ascii')
 
 
 def decrypt(data: str) -> str:
     """Decrypts string data using AWS KMS
 
     data: String to encrypt
-
     Returns base64 encoded string
     """
-    data = bytes(data.encode("ascii"))
+    data = base64.b64decode(data)
     kms = boto3.client("kms")
     res = kms.decrypt(
         CiphertextBlob=data,
@@ -42,7 +42,8 @@ def decrypt(data: str) -> str:
         EncryptionAlgorithm="SYMMETRIC_DEFAULT",
     )
 
-    return base64.b64encode(res["Plaintext"])
+    return res['Plaintext'].decode('ascii')
+
 
 
 def store(data: str) -> None:
@@ -50,15 +51,17 @@ def store(data: str) -> None:
 
     data: JSON String of data to store
     """
+    data = file.check_secret(data, decrypt=True)
     ssm = boto3.client("ssm")
     for key in data.keys():
 
         res = ssm.put_parameter(
             Name=key,
             Description=data[key]["comment"],
-            Value=data[key]["comment"],
-            Type="SecureString",
+            Value=data[key]["value"],
+            Type="SecureString" if data[key]['secret'] else "String",
             KeyId=os.getenv("KEY_ID"),
             Overwrite=True,
         )
+
         print(res)
