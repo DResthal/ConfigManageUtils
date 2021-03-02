@@ -57,7 +57,7 @@ def store(data: str) -> dict:
     data = json.loads(file.check_secret(data, decrypt=True))
     ssm = boto3.client("ssm")
     for key in data.keys():
-        if data[key]['secret']:
+        if data[key]["secret"]:
             res = ssm.put_parameter(
                 Name=key,
                 Description=data[key]["comment"],
@@ -74,4 +74,4 @@ def store(data: str) -> dict:
                 Type="String",
                 Overwrite=True,
             )
-        yield(res)
+        yield (res)
