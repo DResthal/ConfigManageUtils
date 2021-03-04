@@ -132,3 +132,5 @@ dmypy.json
 .yml
 .yaml
 .txt
+git_repo/
+logs/
