@@ -43,6 +43,8 @@ def new_branch(repo: str) -> None:
         return sys.exc_info()
     new_branch.checkout()
 
+    return new_branch_name
+
 
 def add_commit(repo: str, changes: list, message: str, name: str, email: str) -> None:
     """Stage all changes and commit them in one single step.
@@ -58,9 +60,9 @@ def add_commit(repo: str, changes: list, message: str, name: str, email: str) ->
     # Stage chagnes
     repo.index.add(changes)
     author = Actor(name, email)
-    commiter = Actor("Config Manager", "configmgmt@example.com")
+    committer = Actor("Config Manager", "configmgmt@example.com")
     # Commit staged changes
-    repo.index.commit(message, author=author, commiter=commiter)
+    repo.index.commit(message, author=author, committer=committer)
     # Push to remote
     repo.git.push("--set-upstream", repo.remote("origin"), repo.head.ref)
 
