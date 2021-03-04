@@ -19,12 +19,6 @@ a_log = CustomLogger(
 ).create_logger()
 
 
-@app.route("/hello")
-def hello():
-    data = {"message": "It's working!", "author": "Neil", "secret": False}
-    return jsonify(data)
-
-
 @app.route("/getParams", methods=["POST"])
 def getParams():
     git.clone(
