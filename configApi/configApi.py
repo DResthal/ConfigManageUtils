@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-from fileUtils import file
+from fileUtils import file, aws
 from gitUtils import git
 from dotenv import load_dotenv
 from apilogger import CustomLogger
@@ -10,6 +10,7 @@ import os
 
 app = Flask(__name__)
 load_dotenv()
+t_filepath = "git_repo/example.yml"
 
 e_log = CustomLogger(
     "e_log", "configApi/logs/error.log", level=logging.DEBUG
@@ -63,11 +64,17 @@ def putParams():
     return jsonify({"fileUpdate": "Success", "Add and Commit": "Success"}), 200
 
 
-@app.route("/paramStore", methods=["POST"])
-def paramStore():
-    # Authenticate token.
-    # Store current yml values to parameter store; file.store().
-    pass
+@app.route("/storeParams", methods=["POST"])
+def storeParams():
+    data = file.read_yaml(t_filepath)
+    res = aws.store(data)
+    msg = {}
+    for i in res:
+        n = 1
+        msg[n] = i
+        n += 1
+
+    return jsonify(msg), 200
 
 
 if __name__ == "__main__":
