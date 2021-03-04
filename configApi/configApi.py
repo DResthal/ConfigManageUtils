@@ -3,6 +3,7 @@ from fileUtils import file
 from gitUtils import git
 from dotenv import load_dotenv
 from apilogger import CustomLogger
+from datetime import datetime
 import json
 import logging
 import os
@@ -24,7 +25,7 @@ def hello():
     return jsonify(data)
 
 
-@app.route("/getParams")
+@app.route("/getParams", methods=["POST"])
 def getParams():
     git.clone(
         uri="github.com/DralrinResthal/ConfigTestRepo",
@@ -39,9 +40,12 @@ def getParams():
 
 @app.route("/putParams", methods=["POST"])
 def putParams():
+    now = datetime.now().strftime("%m-%d-%Y %H:%M:%S")
     data = request.json
     params = data["parameters"]
     user = data["userInfo"]
+    title = f"Config Change - {now}"
+    msg = f"Created by: {user['userName']} at {now}"
     params = file.check_secret(json.dumps(params))
     file.write_file(params, "git_repo/example.yml")
     git.pull("git_repo")
@@ -57,12 +61,19 @@ def putParams():
         "DralrinResthal/ConfigTestRepo",
         "git_repo",
         os.getenv("ACCESS_TOKEN"),
-        "Test Pull Request!",
-        "This is the body of my test PR",
+        title,
+        msg,
         branch,
         "main",
     )
     return jsonify({"fileUpdate": "Success", "Add and Commit": "Success"}), 200
+
+
+@app.route("/paramStore", methods=["POST"])
+def paramStore():
+    # Authenticate token.
+    # Store current yml values to parameter store; file.store().
+    pass
 
 
 if __name__ == "__main__":
