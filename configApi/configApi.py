@@ -40,14 +40,6 @@ def getParams():
 
 @app.route("/putParams", methods=["POST"])
 def putParams():
-    # Accept JSON POST request -
-    # Encrypt secrets -
-    # Save to yml file -
-    # git pull
-    # git branch (random name generator needed here)
-    # git add + commit
-    # git push
-
     data = request.json
     params = data["parameters"]
     user = data["userInfo"]
