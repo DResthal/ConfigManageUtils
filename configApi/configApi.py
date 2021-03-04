@@ -1,9 +1,9 @@
-from flask import Flask, jsonify
-
-# from fileUtils import file
+from flask import Flask, jsonify, request
+from fileUtils import file
 from gitUtils import git
 from dotenv import load_dotenv
 from apilogger import CustomLogger
+import json
 import logging
 import os
 
@@ -21,7 +21,6 @@ a_log = CustomLogger(
 @app.route("/hello")
 def hello():
     data = {"message": "It's working!", "author": "Neil", "secret": False}
-
     return jsonify(data)
 
 
@@ -32,14 +31,72 @@ def getParams():
         target="git_repo",
         token=os.getenv("ACCESS_TOKEN"),
     )
-    return "Cloned repository", 200
+    data = file.read_yaml("git_repo/example.yml")
+    data = file.check_secret(data, decrypt=True)
+    a_log.info("Repository cloned and data decrypted.")
+
+    return jsonify(json.loads(data)), 200
 
 
-@app.route("/putParams")
+@app.route("/putParams", methods=["POST"])
 def putParams():
-    # Save JSON to yml and perform git actions
-    pass
+    # Accept JSON POST request -
+    # Encrypt secrets -
+    # Save to yml file -
+    # git pull
+    # git branch (random name generator needed here)
+    # git add + commit
+    # git push
+
+    data = request.json
+    params = data["parameters"]
+    user = data["userInfo"]
+    params = file.check_secret(json.dumps(params))
+    file.write_file(params, "git_repo/example.yml")
+    git.pull("git_repo")
+    branch = git.new_branch("git_repo")
+    git.add_commit(
+        "git_repo",
+        ["example.yml"],
+        "Update to example.yml parameters",
+        user["userName"],
+        user["userEmail"],
+    )
+    git.create_pr(
+        "DralrinResthal/ConfigTestRepo",
+        "git_repo",
+        os.getenv("ACCESS_TOKEN"),
+        "Test Pull Request!",
+        "This is the body of my test PR",
+        branch,
+        "main",
+    )
+    return jsonify({"fileUpdate": "Success", "Add and Commit": "Success"}), 200
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=8000)
+
+"""
+# Example JSON response from client
+
+    {
+    "authToken": "abc123",
+    "userInfo": {
+        "userName": "Bob Pickles",
+        "userEmail": "bob@pickles.com"
+    },
+    "parameters": {
+        "a": {
+            "value": "some dumb value",
+            "secret": true,
+            "comment": "some dumb comment"
+        },
+        "b": {
+            "value": "another dumb value",
+            "secret": false,
+            "comment": "another dumb comment"
+            }
+        }
+    }
+"""
