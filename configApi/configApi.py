@@ -32,7 +32,6 @@ def getParams():
         token=os.getenv("ACCESS_TOKEN"),
     )
     data = file.read_yaml("git_repo/example.yml")
-    data = file.check_secret(data, decrypt=True)
     a_log.info("Repository cloned and data decrypted.")
 
     return jsonify(json.loads(data)), 200
