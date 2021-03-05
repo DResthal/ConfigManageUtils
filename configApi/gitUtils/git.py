@@ -4,10 +4,13 @@ from git import Actor
 import git
 import sys
 import os, string, random
+import logging
 
 load_dotenv()
 
 token = os.getenv("ACCESS_TOKEN")
+e_log = logging.getLogger("e_log")
+a_log = logging.getLogger("a_log")
 
 
 def clone(uri: str, target: str, token: str) -> None:
@@ -27,6 +30,20 @@ def clone(uri: str, target: str, token: str) -> None:
         return sys.exc_info()
 
 
+def reset_to_main(repo: str):
+    """Switches repo to main branch
+
+    repo: String name of local repo
+    """
+    repo = git.Repo(repo)
+    try:
+        repo.heads.main.checkout()
+        a_log.info("Checked out main")
+    except:
+        e_log.warning("Unable to checkout main branch")
+        e_log.warning(sys.exc_info())
+
+
 def new_branch(repo: str) -> None:
     """Creates and switches to a new branch
 
@@ -36,7 +53,6 @@ def new_branch(repo: str) -> None:
     chars = string.ascii_letters + string.digits
     length = 20
     repo = git.Repo(repo)
-    repo.heads.main.checkout()
     new_branch_name = "".join(random.choice(chars) for i in range(length))
     try:
         new_branch = repo.create_head(new_branch_name)
@@ -81,7 +97,7 @@ def pull(repo: str) -> None:
 
 
 def create_pr(
-    repo: str,
+    lrepo: str,
     dir: str,
     token: str,
     title: str,
@@ -101,6 +117,6 @@ def create_pr(
     """
     os.chdir(dir)
     g = Github(token)
-    repo = g.get_repo(repo)
+    repo = g.get_repo(lrepo)
     repo.create_pull(title=title, body=body, head=head, base=base)
     os.chdir("../")

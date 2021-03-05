@@ -34,7 +34,6 @@ def getParams():
         )
         data = file.read_yaml("git_repo/example.yml")
         a_log.info("Repository cloned and data decrypted.")
-
         return jsonify(json.loads(data)), 200
     else:
         return "Invalid Auth Token", 403
@@ -51,9 +50,18 @@ def putParams():
         title = f"Config Change - {now}"
         msg = f"Created by: {user['userName']} at {now}"
         params = file.check_secret(json.dumps(params))
-        file.write_file(params, "git_repo/example.yml")
+        # Git Functions
+        # 1. Switch to main
+        # 2. git pull
+        # 3. git checkout -b <random branch name>
+        # 4. Update file
+        # 5. Add and commit new file
+        # 6. Create PR
+        # Switching back to main after PR is unecessary now
+        git.reset_to_main("git_repo")
         git.pull("git_repo")
         branch = git.new_branch("git_repo")
+        file.write_file(params, "git_repo/example.yml")
         git.add_commit(
             "git_repo",
             ["example.yml"],
