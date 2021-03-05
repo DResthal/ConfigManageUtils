@@ -12,6 +12,9 @@ app = Flask(__name__)
 load_dotenv()
 t_filepath = "git_repo/example.yml"
 
+if not os.path.exists("configApi/logs"):
+    os.mkdir("configApi/logs")
+
 e_log = CustomLogger(
     "e_log", "configApi/logs/error.log", level=logging.DEBUG
 ).create_logger()
