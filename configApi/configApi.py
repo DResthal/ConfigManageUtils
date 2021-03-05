@@ -96,7 +96,9 @@ def storeParams():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=8000)
+    port = 8000
+    app.run(debug=True, port=port)
+    a_log.info(f"Server started and running on port {port}")
 
 """
 # Example JSON response from client
