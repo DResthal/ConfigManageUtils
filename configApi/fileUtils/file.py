@@ -1,8 +1,8 @@
 import json
 import ruamel.yaml
 import sys
-from distutils.util import strtobool
 from . import aws
+
 
 # Read's yaml file.
 # Decrypts yml
@@ -19,7 +19,7 @@ def read_yaml(filename: str) -> str:
             data = f.read()
             try:
                 content = yaml.load(data)
-            except raumel.yaml.YAMLError as e:
+            except ruamel.yaml.YAMLError as e:
                 e_msg = f"Error loading yaml file. \n\n{e}"
                 return e_msg
     except FileNotFoundError as e:
@@ -54,7 +54,7 @@ def check_secret(data: str, decrypt: bool = False) -> str:
     # Check for secret flag, encrypt/decrypt as necessary
     for key in data.keys():
         for k, v in data[key].items():
-            if k == "secret" and v == True:
+            if k == "secret" and v:
                 data = data
                 if decrypt:
                     data[key]["value"] = aws.decrypt(data[key]["value"])
