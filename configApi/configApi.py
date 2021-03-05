@@ -28,7 +28,7 @@ def getParams():
     authToken = request.json["authToken"]
     if authToken == os.getenv("AUTH_TOKEN"):
         git.clone(
-            uri="github.com/DralrinResthal/ConfigTestRepo",
+            uri="github.com/devblueray/TestConfigs",
             target="git_repo",
             token=os.getenv("ACCESS_TOKEN"),
         )
@@ -70,7 +70,7 @@ def putParams():
             user["userEmail"],
         )
         git.create_pr(
-            "DralrinResthal/ConfigTestRepo",
+            "devblueray/TestConfigs",
             "git_repo",
             os.getenv("ACCESS_TOKEN"),
             title,
@@ -89,9 +89,10 @@ def putParams():
 @app.route("/storeParams", methods=["POST"])
 def storeParams():
     authToken = request.json["authToken"]
+    prefix = request.json["prefix"]
     if authToken == os.getenv("AUTH_TOKEN"):
         data = file.read_yaml(t_filepath)
-        res = aws.store(data)
+        res = aws.store(data, prefix)
         msg = {}
         for i in res:
             n = 1

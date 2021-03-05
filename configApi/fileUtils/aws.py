@@ -19,7 +19,7 @@ def encrypt(data: str) -> str:
     Returns base64 encoded string
     """
     data = bytes(data.encode("ascii"))
-    kms = boto3.client("kms")
+    kms = boto3.client("kms", region_name="us-east-1")
     res = kms.encrypt(
         KeyId=os.getenv("KEY_ID"),
         Plaintext=data,
@@ -36,7 +36,7 @@ def decrypt(data: str) -> str:
     Returns base64 encoded string
     """
     data = base64.b64decode(data)
-    kms = boto3.client("kms")
+    kms = boto3.client("kms", region_name="us-east-1")
     res = kms.decrypt(
         CiphertextBlob=data,
         KeyId=os.getenv("KEY_ID"),
@@ -46,7 +46,7 @@ def decrypt(data: str) -> str:
     return res["Plaintext"].decode("ascii")
 
 
-def store(data: str) -> dict:
+def store(data: str, prefix: str) -> dict:
     """Stores JSON string key:values in parameter store
 
     data: JSON String of data to store
@@ -55,11 +55,12 @@ def store(data: str) -> dict:
     """
 
     data = json.loads(file.check_secret(data, decrypt=True))
-    ssm = boto3.client("ssm")
+    ssm = boto3.client("ssm", region_name="us-east-1")
+    prefix = "sprnt123"
     for key in data.keys():
         if data[key]["secret"]:
             res = ssm.put_parameter(
-                Name=key,
+                Name=f'/{prefix}/{key}',
                 Description=data[key]["comment"],
                 Value=data[key]["value"],
                 Type="SecureString",
@@ -68,7 +69,7 @@ def store(data: str) -> dict:
             )
         else:
             res = ssm.put_parameter(
-                Name=key,
+                Name=f'/{prefix}/{key}',
                 Description=data[key]["comment"],
                 Value=data[key]["value"],
                 Type="String",
