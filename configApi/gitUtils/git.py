@@ -3,7 +3,7 @@ from github import Github
 from git import Actor
 import git
 import sys
-import os
+import os, string, random
 
 load_dotenv()
 
@@ -27,26 +27,26 @@ def clone(uri: str, target: str, token: str) -> None:
         return sys.exc_info()
 
 
-def new_branch(repo: str, branch: str) -> None:
+def new_branch(repo: str) -> None:
     """Creates and switches to a new branch
 
     repo: Local repo name
     branch: Name of new branch
     """
+    chars = string.ascii_letters + string.digits
+    length = 20
     repo = git.Repo(repo)
+    new_branch_name = "".join(random.choice(chars) for i in range(length))
     try:
-        new_branch = repo.create_head(branch)
+        new_branch = repo.create_head(new_branch_name)
     except:
-        return ()
+        return sys.exc_info()
     new_branch.checkout()
 
+    return new_branch_name
 
-def add_commit(repo: str,
-               changes: list,
-               message: str,
-               name: str,
-               email: str
-               ) -> None:
+
+def add_commit(repo: str, changes: list, message: str, name: str, email: str) -> None:
     """Stage all changes and commit them in one single step.
 
     repo: local name of repository
@@ -60,11 +60,21 @@ def add_commit(repo: str,
     # Stage chagnes
     repo.index.add(changes)
     author = Actor(name, email)
-    commiter = Actor("Config Manager", "configmgmt@example.com")
+    committer = Actor("Config Manager", "configmgmt@example.com")
     # Commit staged changes
-    repo.index.commit(message, author=author, commiter=commiter)
+    repo.index.commit(message, author=author, committer=committer)
     # Push to remote
     repo.git.push("--set-upstream", repo.remote("origin"), repo.head.ref)
+
+
+def pull(repo: str) -> None:
+    """Pull (update) git repo
+
+    repo: local name of repository
+    """
+    repo = git.Repo(repo)
+    origin = repo.remotes.origin
+    origin.pull()
 
 
 def create_pr(

@@ -74,4 +74,5 @@ def store(data: str) -> dict:
                 Type="String",
                 Overwrite=True,
             )
+
         yield (res)
