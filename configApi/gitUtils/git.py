@@ -36,6 +36,7 @@ def new_branch(repo: str) -> None:
     chars = string.ascii_letters + string.digits
     length = 20
     repo = git.Repo(repo)
+    repo.heads.main.checkout()
     new_branch_name = "".join(random.choice(chars) for i in range(length))
     try:
         new_branch = repo.create_head(new_branch_name)
@@ -46,7 +47,9 @@ def new_branch(repo: str) -> None:
     return new_branch_name
 
 
-def add_commit(repo: str, changes: list, message: str, name: str, email: str) -> None:
+def add_commit(
+    repo: str, changes: list, message: str, name: str, email: str
+) -> None:
     """Stage all changes and commit them in one single step.
 
     repo: local name of repository
@@ -78,7 +81,13 @@ def pull(repo: str) -> None:
 
 
 def create_pr(
-    repo: str, dir: str, token: str, title: str, body: str, head: str, base: str
+    repo: str,
+    dir: str,
+    token: str,
+    title: str,
+    body: str,
+    head: str,
+    base: str,
 ) -> None:
     """Create a new pull request
 
