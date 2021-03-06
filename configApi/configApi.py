@@ -49,7 +49,7 @@ def putParams():
         user = data["userInfo"]
         title = f"Config Change - {now}"
         msg = f"Created by: {user['userName']} at {now}"
-        params = file.check_secret(json.dumps(params))
+        params = file.check_secret(json.dumps(params), delete=True)
         # Git Functions
         # 1. Switch to main
         # 2. git pull
