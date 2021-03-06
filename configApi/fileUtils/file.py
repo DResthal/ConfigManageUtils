@@ -94,10 +94,14 @@ def write_file(data: str, filename: str) -> None:
         return f"Invalid JSON: {e}"
 
     yaml = ruamel.yaml.YAML()
-    # yaml.explicit_start = True
-    write_file = open(filename, "w")
+    original = json.loads(read_file(filename))
+    # Updates the original dict, not data
+    # Does not "return" a value so cannot reassign to data
+    original.update(data)
 
+    write_file = open(filename, "w")
     try:
-        yaml.dump(data, write_file)
+        # Because we want to write the newly updated "original" dict
+        yaml.dump(original, write_file)
     except:
         return f"Error saving yaml file. {sys.exc_info()}"
