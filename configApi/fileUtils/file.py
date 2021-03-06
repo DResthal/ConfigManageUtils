@@ -39,30 +39,34 @@ def read_yaml(filename: str) -> str:
 # Check for secret flag.
 # Encrypt/Decrypt secret value per decrypt flag.
 # Return entire dict.
-def check_secret(data: str, decrypt: bool = False, delete: bool = False) -> str:
+def check_secret(
+    data: str, decrypt: bool = False, delete: bool = False
+) -> str:
     """Checks for secret flag, encrypts value if secret True
 
     data: JSON String to check
     decrypt: Boolean flag to decrypt instead of encrypting
     delete: Boolean flag to include removal of values containing "delete" : true
+
     Returns JSON String
 
-    Notes: The delete flag is necessary to avoid checking for "delete" where the 
-    yaml file will not be modified, as nothing needs to be mutated in these instances.
+    Notes: The delete flag is necessary to avoid checking for "delete" on JSON that
+    is not intended to be modified such as that sent to AWS SSM.
     """
     try:
         data = json.loads(data)
     except json.decoder.JSONDecodeError as e:
         return f"Invalid JSON: {e}"
 
+    if delete:
+        for key in data.copy().keys():
+            for k, v in data[key].items():
+                if k == "delete" and v:
+                    del data[key]
+
     # Check for secret flag, encrypt/decrypt as necessary
     for key in data.keys():
         for k, v in data[key].items():
-
-            if delete:
-                if data[key]['delete']:
-                    del data[key]
-
             if k == "secret" and v:
                 data = data
                 if decrypt:
