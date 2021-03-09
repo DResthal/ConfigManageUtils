@@ -4,10 +4,13 @@ from git import Actor
 import git
 import sys
 import os, string, random
+import logging
 
 load_dotenv()
 
 token = os.getenv("ACCESS_TOKEN")
+e_log = logging.getLogger("e_log")
+a_log = logging.getLogger("a_log")
 
 
 def clone(uri: str, target: str, token: str) -> None:
@@ -25,6 +28,20 @@ def clone(uri: str, target: str, token: str) -> None:
         git.Repo.clone_from(remote, target)
     except:
         return sys.exc_info()
+
+
+def reset_to_main(repo: str):
+    """Switches repo to main branch
+
+    repo: String name of local repo
+    """
+    repo = git.Repo(repo)
+    try:
+        repo.heads.main.checkout()
+        a_log.info("Checked out main")
+    except:
+        e_log.warning("Unable to checkout main branch")
+        e_log.warning(sys.exc_info())
 
 
 def new_branch(repo: str) -> None:
@@ -46,7 +63,9 @@ def new_branch(repo: str) -> None:
     return new_branch_name
 
 
-def add_commit(repo: str, changes: list, message: str, name: str, email: str) -> None:
+def add_commit(
+    repo: str, changes: list, message: str, name: str, email: str
+) -> None:
     """Stage all changes and commit them in one single step.
 
     repo: local name of repository
@@ -78,7 +97,13 @@ def pull(repo: str) -> None:
 
 
 def create_pr(
-    repo: str, dir: str, token: str, title: str, body: str, head: str, base: str
+    lrepo: str,
+    dir: str,
+    token: str,
+    title: str,
+    body: str,
+    head: str,
+    base: str,
 ) -> None:
     """Create a new pull request
 
@@ -92,6 +117,6 @@ def create_pr(
     """
     os.chdir(dir)
     g = Github(token)
-    repo = g.get_repo(repo)
+    repo = g.get_repo(lrepo)
     repo.create_pull(title=title, body=body, head=head, base=base)
     os.chdir("../")

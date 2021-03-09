@@ -28,13 +28,12 @@ def getParams():
     authToken = request.json["authToken"]
     if authToken == os.getenv("AUTH_TOKEN"):
         git.clone(
-            uri="github.com/DralrinResthal/ConfigTestRepo",
+            uri="github.com/devblueray/TestConfigs",
             target="git_repo",
             token=os.getenv("ACCESS_TOKEN"),
         )
         data = file.read_yaml("git_repo/example.yml")
         a_log.info("Repository cloned and data decrypted.")
-
         return jsonify(json.loads(data)), 200
     else:
         return "Invalid Auth Token", 403
@@ -50,10 +49,19 @@ def putParams():
         user = data["userInfo"]
         title = f"Config Change - {now}"
         msg = f"Created by: {user['userName']} at {now}"
-        params = file.check_secret(json.dumps(params))
-        file.write_file(params, "git_repo/example.yml")
+        params = file.check_secret(json.dumps(params), delete=True)
+        # Git Functions
+        # 1. Switch to main
+        # 2. git pull
+        # 3. git checkout -b <random branch name>
+        # 4. Update file
+        # 5. Add and commit new file
+        # 6. Create PR
+        # Switching back to main after PR is unecessary now
+        git.reset_to_main("git_repo")
         git.pull("git_repo")
         branch = git.new_branch("git_repo")
+        file.write_file(params, "git_repo/example.yml")
         git.add_commit(
             "git_repo",
             ["example.yml"],
@@ -62,7 +70,7 @@ def putParams():
             user["userEmail"],
         )
         git.create_pr(
-            "DralrinResthal/ConfigTestRepo",
+            "devblueray/TestConfigs",
             "git_repo",
             os.getenv("ACCESS_TOKEN"),
             title,
@@ -81,9 +89,10 @@ def putParams():
 @app.route("/storeParams", methods=["POST"])
 def storeParams():
     authToken = request.json["authToken"]
+    prefix = request.json["prefix"]
     if authToken == os.getenv("AUTH_TOKEN"):
         data = file.read_yaml(t_filepath)
-        res = aws.store(data)
+        res = aws.store(data, prefix)
         msg = {}
         for i in res:
             n = 1

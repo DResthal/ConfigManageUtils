@@ -1,8 +1,8 @@
 import json
 import ruamel.yaml
 import sys
-from distutils.util import strtobool
 from . import aws
+
 
 # Read's yaml file.
 # Decrypts yml
@@ -19,7 +19,7 @@ def read_yaml(filename: str) -> str:
             data = f.read()
             try:
                 content = yaml.load(data)
-            except raumel.yaml.YAMLError as e:
+            except ruamel.yaml.YAMLError as e:
                 e_msg = f"Error loading yaml file. \n\n{e}"
                 return e_msg
     except FileNotFoundError as e:
@@ -39,22 +39,35 @@ def read_yaml(filename: str) -> str:
 # Check for secret flag.
 # Encrypt/Decrypt secret value per decrypt flag.
 # Return entire dict.
-def check_secret(data: str, decrypt: bool = False) -> str:
+def check_secret(
+    data: str, decrypt: bool = False, delete: bool = False
+) -> str:
     """Checks for secret flag, encrypts value if secret True
 
     data: JSON String to check
     decrypt: Boolean flag to decrypt instead of encrypting
+    delete: Boolean flag to include removal of values containing "delete" : true
+
     Returns JSON String
+
+    Notes: The delete flag is necessary to avoid checking for "delete" on JSON that
+    is not intended to be modified such as that sent to AWS SSM.
     """
     try:
         data = json.loads(data)
     except json.decoder.JSONDecodeError as e:
         return f"Invalid JSON: {e}"
 
+    if delete:
+        for key in data.copy().keys():
+            for k, v in data[key].items():
+                if k == "delete" and v:
+                    del data[key]
+
     # Check for secret flag, encrypt/decrypt as necessary
     for key in data.keys():
         for k, v in data[key].items():
-            if k == "secret" and v == True:
+            if k == "secret" and v:
                 data = data
                 if decrypt:
                     data[key]["value"] = aws.decrypt(data[key]["value"])
@@ -81,10 +94,14 @@ def write_file(data: str, filename: str) -> None:
         return f"Invalid JSON: {e}"
 
     yaml = ruamel.yaml.YAML()
-    # yaml.explicit_start = True
-    write_file = open(filename, "w")
+    original = json.loads(read_file(filename))
+    # Updates the original dict, not data
+    # Does not "return" a value so cannot reassign to data
+    original.update(data)
 
+    write_file = open(filename, "w")
     try:
-        yaml.dump(data, write_file)
+        # Because we want to write the newly updated "original" dict
+        yaml.dump(original, write_file)
     except:
         return f"Error saving yaml file. {sys.exc_info()}"
