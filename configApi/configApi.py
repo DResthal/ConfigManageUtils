@@ -170,6 +170,7 @@ def putParams():
     if status != 200:
         return msg, status
 
+    # Validate supplied authToken
     if not token_is_valid(request.json["authToken"]):
         app_log.info(f"Unauthorized request at /putParams. {request.json}")
         return "Invalid authToken. This incident has been logged.", 403
@@ -189,6 +190,7 @@ def putParams():
         # 5. Add and commit new file
         # 6. Create PR
         # Switching back to main after PR is unecessary now
+        # These notes have too much future chaos potential to remove.
         git.reset_to_main("git_repo")
         git.pull("git_repo")
         branch = git.new_branch("git_repo")
