@@ -97,7 +97,7 @@ def token_is_valid(authToken: str) -> bool:
 
     authToken: Str authToken from request.json
     """
-    if authToken != os.getenv("JSON_EX_AUTH_TOKEN"):
+    if authToken != os.getenv("JSON_AUTH_TOKEN"):
         return False
     else:
         return True
@@ -161,13 +161,19 @@ def getParams():
 
 @app.route("/putParams", methods=["POST"])
 def putParams():
+    # Log endpoint access
+    app_log.info(f"Request made to /putParams. \n {request.json}")
+
+    # Check that is_json_allowed is "OK"
     msg, status = is_json_allowed(request.json)
 
     if status != 200:
         return msg, status
 
-    authToken = request.json["authToken"]
-    if authToken == os.getenv("AUTH_TOKEN"):
+    if not token_is_valid(request.json["authToken"]):
+        app_log.info(f"Unauthorized request at /putParams. {request.json}")
+        return "Invalid authToken. This incident has been logged.", 403
+    else:
         now = datetime.now().strftime("%m-%d-%Y %H:%M:%S")
         data = request.json
         params = data["parameters"]
@@ -207,8 +213,6 @@ def putParams():
             jsonify({"fileUpdate": "Success", "Add and Commit": "Success"}),
             200,
         )
-    else:
-        return "Invalid Auth Token", 403
 
 
 @app.route("/storeParams", methods=["POST"])
