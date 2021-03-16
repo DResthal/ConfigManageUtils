@@ -12,12 +12,55 @@ content-type: application/json
 
 ### 
 
-# Correct AUTH token sent to getParams
+# Correct AUTH token and test env
 POST http://127.0.0.1:8000/getParams
 content-type: application/json
 
 {
-    "authToken" : "FXbWZBmGstqCJP8D7P3kzguthu479dFv"
+  "authToken": "FXbWZBmGstqCJP8D7P3kzguthu479dFv",
+  "userInfo": {
+    "userName": "Bob Pickles",
+      "userEmail": "bob@pickles.com"
+  },
+  "env": "test",
+  "parameters": {
+    "a": {
+      "value": "some dumb value",
+      "secret": true,
+      "comment": "some dumb comment"
+    },
+    "b": {
+      "value": "another dumb value",
+      "secret": false,
+      "comment": "another dumb comment"
+    }
+  }
+}
+
+###
+# Correct AUTH token and prod env
+POST http://127.0.0.1:8000/getParams
+content-type: application/json
+
+{
+  "authToken": "FXbWZBmGstqCJP8D7P3kzguthu479dFv",
+  "userInfo": {
+    "userName": "Bob Pickles",
+      "userEmail": "bob@pickles.com"
+  },
+  "env": "prod",
+  "parameters": {
+    "a": {
+      "value": "some dumb value",
+      "secret": true,
+      "comment": "some dumb comment"
+    },
+    "b": {
+      "value": "another dumb value",
+      "secret": false,
+      "comment": "another dumb comment"
+    }
+  }
 }
 
 ###
@@ -33,6 +76,7 @@ content-type: application/json
         "userName": "Bob Pickles",
         "userEmail": "bob@pickles.com"
     },
+    "env": "prod",
     "parameters": {
         "a": {
             "value": "some dumb value",
