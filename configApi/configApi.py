@@ -4,7 +4,6 @@ from gitUtils import git
 from dotenv import load_dotenv
 from apilogger import CustomLogger
 from datetime import datetime
-import traceback
 import config
 import json
 import logging
@@ -32,77 +31,131 @@ git_log = CustomLogger(
 app_log.info("Application started.")
 
 
+def validate_request(data: dict) -> tuple:
+    """Checks JSON for specified values and returns
+    a tuple containing a message and status code in str and int form respectively.
+    The return value of this function can be directly returned by Flask if necessary.
+
+    data: entire JSON from request.json
+
+    Returns (msg: str, status: int)
+    """
+    # Check for authToken
+    try:
+        authToken = data["authToken"]
+    except KeyError as e:
+        err_log.warning(e)
+        err_log.warning("No authToken")
+        return ("No authToken", 400)
+
+    # Check for userName
+    try:
+        userName = data["userInfo"]["userName"]
+    except KeyError as e:
+        err_log.warning(e)
+        err_log.warning("No userName")
+        return ("No userName", 400)
+
+        # Check for env
+        try:
+            userName = data["env"]
+        except KeyError as e:
+            err_log.warning(e)
+            err_log.warning("No env")
+            return ("No env", 400)
+
+    return ("JSON response accepted", 200)
+
+
+def which_env(data: str) -> tuple:
+    """Returns a tuple whose contents are dependent on
+    which env tag was provided in the request.json.
+    Returns None if env is invalid.
+
+    data: authToken from request.json['authToken']
+
+    Return (git_uri, filename)
+    """
+    data = json.loads(data)
+    env = data["env"]
+
+    if env == "test":
+        git_uri = os.getenv("TEST_REPO_URI")
+        filename = os.getenv("TEST_FILENAME")
+    elif env == "prod":
+        git_uri = os.getenv("PROD_REPO_URI")
+        filename = os.getenv("PROD_FILENAME")
+    else:
+        return None
+
+    return (git_uri, filename)
+
+
+def token_is_valid(authToken: str) -> bool:
+    """Checks supplied authToken against the defined "master" authToken.
+    Returns True if tokens match and false if not.
+
+    authToken: Str authToken from request.json
+    """
+    if authToken != os.getenv("JSON_EX_AUTH_TOKEN"):
+        return False
+    else:
+        return True
+
+
 @app.route("/getParams", methods=["POST"])
 def getParams():
-    # Check for authToken
-    if request.json["authToken"]:
-        authToken = request.json["authToken"]
-    else:
-        msg = "No authToken"
-        app_log.info(msg)
-        return msg, 403
+    # Log the endpoint access
+    app_log.info(f"Request made to /getParams. \n {request.json}")
 
-    # Check for env
-    if request.json["env"]:
-        env = request.json["env"]
-    else:
-        err_log.warning("No env tag")
-        return "No env tag", 400
+    # Check that validate_request is "OK"
+    msg, status = validate_request(request.json)
+    if status != 200:
+        return (msg, status)
 
-    # Check which env
-    if env == "test":
-        repository_uri = os.getenv("TEST_REPO_URI")
-    elif env == "prod":
-        repository_uri = os.getenv("PROD_REPO_URI")
-    else:
-        msg = "Invalid env, please specify 'prod' or 'test'. env={env}"
-        err_log.warning(msg)
-        return msg, 400
+    # Validate authToken
+    if not token_is_valid(request.json["authToken"]):
+        return ("Token is not valid. Please provide a valid authToken", 403)
 
-    app_log.info(f"/getParams request: authToken={authToken}, env={env}")
+    # Get env
+    git_uri, filename = which_env(request.json["env"])
 
-    # Check authToken is valid
-    if authToken == os.getenv("JSON_EX_AUTH_TOKEN"):
-        app_log.info("Auth token accepted.")
-        target = f"{env}-repository-{request.json['userInfo']['userName']}"
+    # Validate env
+    if git_uri is None:
+        return ("Invalid env", 400)
 
-        # Check directory name does not exist or was removed
-        if git.dirname_exists(target):
-            err_log.warning(
-                f"Unable to remove {target} directory. Cannot clone directory."
-            )
-            return (
-                f"Directory {target} exists and cannot be removed. Cloning cannot proceed. Please see error.log for more details.",
-                500,
-            )
+    # Generate local directory name
+    target_dir = (
+        f"{request.json['env']}-repo-{request.json['userInfo']['userName']}"
+    )
 
-        # Run git clone
-        try:
-            git.clone(
-                uri=repository_uri,
-                target=target,
-                token=os.getenv("ACCESS_TOKEN"),
-            )
-            app_log.info(f"Repository cloned to {target}")
-        except:
-            return "Unable to clone repository. Please read error.log for more details."
-
-        # Read yaml file and return JSON
-        try:
-            data = file.read_yaml(f"{target}/example.yml")
-            return jsonify(json.loads(data)), 200
-        except:
-            msg = "There appears to not be a yaml file, or the yaml file contains errors that cannot be parsed."
-            err = traceback.format_exc()
-            err_log.warning(msg)
-            err_log.warning(err)
-            return msg, 500
-    else:
-        msg = (
-            f"Invalid authToken supplied to getParams. authToken = {authToken}"
+    # Ensure that the local directory does not exist
+    if git.dirname_exists(target_dir):
+        return (
+            f"Unable to remove {target_dir}. Please contact your admin.",
+            500,
         )
-        err_log.warning(msg)
-        return msg, 403
+
+    # Clone the repository
+    try:
+        git.clone(uri=git_uri, target=target_dir)
+        app_log.info(f"Repository has been cloned to {target_dir}.")
+    except:
+        return (
+            "Unable to clone repository. Refer to error.log for more details.",
+            505,
+        )
+
+    # Read the file
+    try:
+        app_log.info(
+            f"Reading file contents. User: {request.json['userInfo']['userName']}"
+        )
+        data = file.read_yaml(f"{target_dir}/{filename}")
+        return jsonify(json.loads(data)), 200
+    except:
+        msg = "There appears to be an issue reading the yaml file. Refer to error.log for more details"
+        return (msg, 500)
 
 
 @app.route("/putParams", methods=["POST"])
@@ -116,7 +169,7 @@ def putParams():
         title = f"Config Change - {now}"
         msg = f"Created by: {user['userName']} at {now}"
         params = file.check_secret(json.dumps(params), delete=True)
-        # Git Functions
+        # Git Functions Required Order
         # 1. Switch to main
         # 2. git pull
         # 3. git checkout -b <random branch name>

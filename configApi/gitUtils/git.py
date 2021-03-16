@@ -1,8 +1,8 @@
 from dotenv import load_dotenv
 from github import Github
-import traceback
 from git import Actor
 from shutil import rmtree
+import traceback
 import git
 import sys
 import os, string, random
@@ -27,24 +27,31 @@ def dirname_exists(dirname: str) -> bool:
     if os.path.exists(dirname):
         try:
             rmtree(dirname, ignore_errors=True)
+            git_log.info(
+                f"{dirname} previously existed and has now been removed."
+            )
             return False
         except OSError as e:
+            err_log.warning(f"Error removing directory {dirname}")
             err_log.warning(e)
+            git_log.warning(
+                f"{dirname} exists and CANNOT be removed. Please see error.log for more details."
+            )
             return True
     else:
         return False
 
 
-def clone(uri: str, target: str, token: str) -> None:
+def clone(uri: str, target: str) -> None:
     """Clone a private repo with access token
 
     uri: Repository uri less "https://"
     target: local directory name target; what will you call local?
-    token: Github access token string
 
     example uri "github.com/DralrinResthal/ScanSlated-Portal.git"
 
     """
+    token = os.getenv("ACCESS_TOKEN")
     remote = f"https://{token}:x-oauth-basic@{uri}"
     try:
         git.Repo.clone_from(remote, target)
