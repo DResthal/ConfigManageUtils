@@ -1,6 +1,8 @@
 from dotenv import load_dotenv
 from github import Github
+import traceback
 from git import Actor
+from shutil import rmtree
 import git
 import sys
 import os, string, random
@@ -9,8 +11,28 @@ import logging
 load_dotenv()
 
 token = os.getenv("ACCESS_TOKEN")
-e_log = logging.getLogger("e_log")
-a_log = logging.getLogger("a_log")
+git_log = logging.getLogger("git_log")
+err_log = logging.getLogger("error_log")
+
+
+def dirname_exists(dirname: str) -> bool:
+    """Check if the dirname specified exists.
+    If so, delete that dirname so that the repository can be cloned properly
+
+    dirname: String name of directory
+
+    returns True if directory exists and cannot be removed,
+    False if directory does not exist or exists and was removed.
+    """
+    if os.path.exists(dirname):
+        try:
+            rmtree(dirname, ignore_errors=True)
+            return False
+        except OSError as e:
+            err_log.warning(e)
+            return True
+    else:
+        return False
 
 
 def clone(uri: str, target: str, token: str) -> None:
@@ -23,11 +45,14 @@ def clone(uri: str, target: str, token: str) -> None:
     example uri "github.com/DralrinResthal/ScanSlated-Portal.git"
 
     """
-    remote = f"https://{token}:x-oauth-basic@{uri}.git"
+    remote = f"https://{token}:x-oauth-basic@{uri}"
     try:
         git.Repo.clone_from(remote, target)
+        git_log.info(f"Repository '{uri}' has been cloned to {target}")
+
     except:
-        return sys.exc_info()
+        msg = f"Unable to clone repository {uri}. {traceback.format_exc()}"
+        err_log.warning(msg)
 
 
 def reset_to_main(repo: str):
@@ -38,10 +63,8 @@ def reset_to_main(repo: str):
     repo = git.Repo(repo)
     try:
         repo.heads.main.checkout()
-        a_log.info("Checked out main")
     except:
-        e_log.warning("Unable to checkout main branch")
-        e_log.warning(sys.exc_info())
+        err_log.warning("Placeholder, update this later")
 
 
 def new_branch(repo: str) -> None:
@@ -58,6 +81,7 @@ def new_branch(repo: str) -> None:
         new_branch = repo.create_head(new_branch_name)
     except:
         return sys.exc_info()
+
     new_branch.checkout()
 
     return new_branch_name
