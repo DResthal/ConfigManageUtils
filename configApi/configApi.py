@@ -31,7 +31,7 @@ git_log = CustomLogger(
 app_log.info("Application started.")
 
 
-def validate_request(data: dict) -> tuple:
+def is_json_allowed(data: dict) -> tuple:
     """Checks JSON for specified values and returns
     a tuple containing a message and status code in str and int form respectively.
     The return value of this function can be directly returned by Flask if necessary.
@@ -108,8 +108,9 @@ def getParams():
     # Log the endpoint access
     app_log.info(f"Request made to /getParams. \n {request.json}")
 
-    # Check that validate_request is "OK"
-    msg, status = validate_request(request.json)
+    # Check that is_json_allowed is "OK"
+    msg, status = is_json_allowed(request.json)
+
     if status != 200:
         return (msg, status)
 
@@ -160,6 +161,11 @@ def getParams():
 
 @app.route("/putParams", methods=["POST"])
 def putParams():
+    msg, status = is_json_allowed(request.json)
+
+    if status != 200:
+        return msg, status
+
     authToken = request.json["authToken"]
     if authToken == os.getenv("AUTH_TOKEN"):
         now = datetime.now().strftime("%m-%d-%Y %H:%M:%S")
@@ -207,6 +213,10 @@ def putParams():
 
 @app.route("/storeParams", methods=["POST"])
 def storeParams():
+    msg, status = is_json_allowed(request.json)
+    if status != 200:
+        return msg, status
+
     authToken = request.json["authToken"]
     prefix = request.json["prefix"]
     if authToken == os.getenv("AUTH_TOKEN"):
