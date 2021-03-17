@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 from github import Github
 from git import Actor
 from shutil import rmtree
+from datetime import datetime
 import traceback
 import git
 import sys
@@ -52,7 +53,7 @@ def clone(uri: str, target: str) -> None:
 
     """
     token = os.getenv("ACCESS_TOKEN")
-    remote = f"https://{token}:x-oauth-basic@{uri}"
+    remote = f"https://{token}:x-oauth-basic@github.com/{uri}.git"
     try:
         git.Repo.clone_from(remote, target)
         git_log.info(f"Repository '{uri}' has been cloned to {target}")
@@ -127,27 +128,30 @@ def pull(repo: str) -> None:
     origin.pull()
 
 
-def create_pr(
-    lrepo: str,
-    dir: str,
-    token: str,
-    title: str,
-    body: str,
-    head: str,
-    base: str,
-) -> None:
-    """Create a new pull request
+def create_pr(uri: str, dir: str, user: str, branch_name: str) -> None:
+    """Create a new pull request, always from <branch> to <main>
 
-    repo: Repository in User/Repository format
-    dir: local directory name
-    token: Github access token
-    title: Title of new pull request
-    body: Body of pull request
-    head: Branch to merge (dev -> main, this is dev)
-    base: Branch to merge new branch into (dev -> main, this is main)
+    uri: Git repo uri, User/Repository
+    dir: Local directory name
+    user: Username to include in PR
+    branch_name: Branch to create PR from
     """
+    # Generating variables
+    now = datetime.now().strftime("%m-%d-%Y %H:%M:%S")
+    title = f"Config Change - {now}"
+    msg = f"Created by: {user} at {now}"
+
+    # Move into local directory
     os.chdir(dir)
-    g = Github(token)
-    repo = g.get_repo(lrepo)
-    repo.create_pull(title=title, body=body, head=head, base=base)
+
+    # Instanciate Github using current local directory
+    g = Github(os.getenv("ACCESS_TOKEN"))
+
+    # Instanciate repository in current local directory
+    repo = g.get_repo(uri)
+
+    # Create the PR
+    repo.create_pull(title=title, body=msg, head=branch_name, base="main")
+
+    # Moved back out of current local directory
     os.chdir("../")

@@ -94,7 +94,7 @@ def write_file(data: str, filename: str) -> None:
         return f"Invalid JSON: {e}"
 
     yaml = ruamel.yaml.YAML()
-    original = json.loads(read_file(filename))
+    original = json.loads(read_yaml(filename))
     # Updates the original dict, not data
     # Does not "return" a value so cannot reassign to data
     original.update(data)

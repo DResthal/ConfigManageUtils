@@ -3,7 +3,6 @@ from fileUtils import file, aws
 from gitUtils import git
 from dotenv import load_dotenv
 from apilogger import CustomLogger
-from datetime import datetime
 import config
 import json
 import logging
@@ -56,29 +55,26 @@ def is_json_allowed(data: dict) -> tuple:
         err_log.warning("No userName")
         return ("No userName", 400)
 
-        # Check for env
-        try:
-            userName = data["env"]
-        except KeyError as e:
-            err_log.warning(e)
-            err_log.warning("No env")
-            return ("No env", 400)
+    # Check for env
+    try:
+        userName = data["env"]
+    except KeyError as e:
+        err_log.warning(e)
+        err_log.warning("No env")
+        return ("No env", 400)
 
     return ("JSON response accepted", 200)
 
 
-def which_env(data: str) -> tuple:
+def which_env(env: str) -> tuple:
     """Returns a tuple whose contents are dependent on
     which env tag was provided in the request.json.
     Returns None if env is invalid.
 
-    data: authToken from request.json['authToken']
+    env: string of env from request.json
 
     Return (git_uri, filename)
     """
-    data = json.loads(data)
-    env = data["env"]
-
     if env == "test":
         git_uri = os.getenv("TEST_REPO_URI")
         filename = os.getenv("TEST_FILENAME")
@@ -103,6 +99,22 @@ def token_is_valid(authToken: str) -> bool:
         return True
 
 
+def generate_directory_name(data: dict) -> str:
+    """Generates the local directory name for the git repo
+    based on the env and userName supplied.
+
+    data: Dict containing either env and userInfo : { userName : }
+    or the entire request.json
+
+    This function should NEVER fail, because it should always be called AFTER
+    is_json_allowed returns 200, OK and never upon any other result of is_json_allowed.
+    Therefore, no error checking should be included here as errors should be caught
+    before this function is ever invoked.
+    """
+    target_dir = f"{data['env']}-repo-{data['userInfo']['userName']}"
+    return target_dir
+
+
 @app.route("/getParams", methods=["POST"])
 def getParams():
     # Log the endpoint access
@@ -114,7 +126,7 @@ def getParams():
     if status != 200:
         return (msg, status)
 
-    # Validate authToken
+    # Validate authToken before proceeding
     if not token_is_valid(request.json["authToken"]):
         return ("Token is not valid. Please provide a valid authToken", 403)
 
@@ -125,10 +137,8 @@ def getParams():
     if git_uri is None:
         return ("Invalid env", 400)
 
-    # Generate local directory name
-    target_dir = (
-        f"{request.json['env']}-repo-{request.json['userInfo']['userName']}"
-    )
+    # Generate directory name
+    target_dir = generate_directory_name(request.json)
 
     # Ensure that the local directory does not exist
     if git.dirname_exists(target_dir):
@@ -170,51 +180,64 @@ def putParams():
     if status != 200:
         return msg, status
 
-    # Validate supplied authToken
+    # Validate authToken before proceeding
     if not token_is_valid(request.json["authToken"]):
         app_log.info(f"Unauthorized request at /putParams. {request.json}")
         return "Invalid authToken. This incident has been logged.", 403
-    else:
-        now = datetime.now().strftime("%m-%d-%Y %H:%M:%S")
-        data = request.json
-        params = data["parameters"]
-        user = data["userInfo"]
-        title = f"Config Change - {now}"
-        msg = f"Created by: {user['userName']} at {now}"
-        params = file.check_secret(json.dumps(params), delete=True)
-        # Git Functions Required Order
-        # 1. Switch to main
-        # 2. git pull
-        # 3. git checkout -b <random branch name>
-        # 4. Update file
-        # 5. Add and commit new file
-        # 6. Create PR
-        # Switching back to main after PR is unecessary now
-        # These notes have too much future chaos potential to remove.
-        git.reset_to_main("git_repo")
-        git.pull("git_repo")
-        branch = git.new_branch("git_repo")
-        file.write_file(params, "git_repo/example.yml")
-        git.add_commit(
-            "git_repo",
-            ["example.yml"],
-            "Update to example.yml parameters",
-            user["userName"],
-            user["userEmail"],
-        )
-        git.create_pr(
-            "devblueray/TestConfigs",
-            "git_repo",
-            os.getenv("ACCESS_TOKEN"),
-            title,
-            msg,
-            branch,
-            "main",
+
+    # Get filename based on env
+    git_uri, filename = which_env(request.json["env"])
+
+    # Generate directory name
+    target_dir = generate_directory_name(request.json)
+
+    # Checking that the directory name generated is present, if not, the request was bad.
+    if not os.path.exists(target_dir):
+        err_log.warning(
+            f"{target_dir} does not exist. Bad JSON request. \n {request.json}"
         )
         return (
-            jsonify({"fileUpdate": "Success", "Add and Commit": "Success"}),
-            200,
+            "Something went wrong. Please ensure your authToken, userName and env are the same as when you created your clone.",
+            400,
         )
+
+    # Encrypt secret parameters
+    enc_params = file.check_secret(
+        json.dumps(request.json["parameters"]), delete=True
+    )
+
+    # I think that some of this needs to be moved out of putParams
+    # I'm thinking that create_pr could be in a cleanup endpoint that also deletes
+    # the local directory, called AFTER storeParams.
+    # Required Order of Git Functions
+    # 1. Switch to main
+    # 2. git pull
+    # 3. git checkout -b <random branch name>
+    # 4. Update file
+    # 5. Add and commit new file
+    # 6. Create PR
+    # Switching back to main after PR is unecessary now
+    # These notes have too much future chaos potential to remove.
+    git.reset_to_main(target_dir)
+    git.pull(target_dir)
+    new_branch = git.new_branch(target_dir)
+    file.write_file(enc_params, filename=f"{target_dir}/{filename}")
+    git.add_commit(
+        target_dir,
+        [filename],
+        "Updated yaml parameters",
+        request.json["userInfo"]["userName"],
+        request.json["userInfo"]["userEmail"],
+    )
+    git.create_pr(
+        uri=git_uri,
+        user=request.json["userInfo"]["userName"],
+        dir=target_dir,
+        branch_name=new_branch,
+    )
+
+    app_log.info(f"Created PR for {git_uri}")
+    return "PR Created", 200
 
 
 @app.route("/storeParams", methods=["POST"])

@@ -21,7 +21,7 @@ def encrypt(data: str) -> str:
     data = bytes(data.encode("ascii"))
     kms = boto3.client("kms", region_name="us-east-1")
     res = kms.encrypt(
-        KeyId=os.getenv("KEY_ID"),
+        KeyId=os.getenv("AWS_KEY_ID"),
         Plaintext=data,
         EncryptionAlgorithm="SYMMETRIC_DEFAULT",
     )
@@ -39,7 +39,7 @@ def decrypt(data: str) -> str:
     kms = boto3.client("kms", region_name="us-east-1")
     res = kms.decrypt(
         CiphertextBlob=data,
-        KeyId=os.getenv("KEY_ID"),
+        KeyId=os.getenv("AWS_AWS_KEY_ID"),
         EncryptionAlgorithm="SYMMETRIC_DEFAULT",
     )
 
@@ -60,16 +60,16 @@ def store(data: str, prefix: str) -> dict:
     for key in data.keys():
         if data[key]["secret"]:
             res = ssm.put_parameter(
-                Name=f'/{prefix}/{key}',
+                Name=f"/{prefix}/{key}",
                 Description=data[key]["comment"],
                 Value=data[key]["value"],
                 Type="SecureString",
-                KeyId=os.getenv("KEY_ID"),
+                KeyId=os.getenv("AWS_KEY_ID"),
                 Overwrite=True,
             )
         else:
             res = ssm.put_parameter(
-                Name=f'/{prefix}/{key}',
+                Name=f"/{prefix}/{key}",
                 Description=data[key]["comment"],
                 Value=data[key]["value"],
                 Type="String",
