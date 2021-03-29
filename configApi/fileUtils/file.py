@@ -85,7 +85,7 @@ def last_modified(data: dict) -> dict:
     data: The entire params dict from request.json
     """
 
-    user = data["userInfo"]["username"]
+    user = data["userInfo"]["userName"]
     date = datetime.now().strftime("%m-%d-%Y %H:%M:%S")
 
     for key in data.keys():
