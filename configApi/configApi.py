@@ -201,10 +201,11 @@ def putParams():
             400,
         )
 
+    # Add last modified data to each param
+    params = file.last_modified(request.json)
+
     # Encrypt secret parameters
-    enc_params = file.check_secret(
-        json.dumps(request.json["parameters"]), delete=True
-    )
+    enc_params = file.check_secret(json.dumps(params), delete=True)
 
     # I think that some of this needs to be moved out of putParams
     # I'm thinking that create_pr could be in a cleanup endpoint that also deletes

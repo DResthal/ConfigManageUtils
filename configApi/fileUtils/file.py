@@ -2,6 +2,7 @@ import json
 import ruamel.yaml
 import sys
 from . import aws
+from datetime import datetime
 
 
 # Read's yaml file.
@@ -75,6 +76,22 @@ def check_secret(
                     data[key]["value"] = aws.encrypt(data[key]["value"])
 
     data = json.dumps(data)
+    return data
+
+
+def last_modified(data: dict) -> dict:
+    """Add "last_modified" date and user for each updated parameter
+
+    data: The entire params dict from request.json
+    """
+
+    user = data["userInfo"]["username"]
+    date = datetime.now().strftime("%m-%d-%Y %H:%M:%S")
+
+    for key in data.keys():
+        for k, v in data[key].items():
+            v.update({"last_modified": {"date": date, "user": user}})
+
     return data
 
 
