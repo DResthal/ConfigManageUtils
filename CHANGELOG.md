@@ -1,6 +1,8 @@
 # Changelog  
 This document serves to log all changes, updates and requests in long term storage format.  
 
+This document does not serve to contain ALL commits, only those containing completed updates, code changes or repository changes.
+
 ## TODO  
 
 ## UPDATES  
