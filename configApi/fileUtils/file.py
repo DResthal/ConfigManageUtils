@@ -79,20 +79,19 @@ def check_secret(
     return data
 
 
-def last_modified(data: dict) -> dict:
+def last_modified(params: dict, user: str) -> dict:
     """Add "last_modified" date and user for each updated parameter
 
     data: The entire params dict from request.json
     """
-
-    user = data["userInfo"]["userName"]
     date = datetime.now().strftime("%m-%d-%Y %H:%M:%S")
+    
+    for key in params.keys():
+        params[key].update({"last_modified": {"date": date, "user": user}})
 
-    for key in data.keys():
-        for k, v in data[key].items():
-            v.update({"last_modified": {"date": date, "user": user}})
+    return params
+    
 
-    return data
 
 
 # Convert JSON to yaml and write to file.

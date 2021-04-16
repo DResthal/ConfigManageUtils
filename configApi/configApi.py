@@ -204,7 +204,7 @@ def putParams():
         return (400)
 
     # Add last modified data to each param
-    params = file.last_modified(request.json)
+    params = file.last_modified(request.json["parameters"], request.json["userInfo"]["userName"])
 
     # Encrypt secret parameters
     enc_params = file.check_secret(json.dumps(params), delete=True)
