@@ -50,7 +50,7 @@ def is_json_allowed(data: dict) -> tuple:
     except KeyError as e:
         err_log.warning(e)
         err_log.warning("No authToken")
-        return ("No authToken", 400)
+        return (400)
 
     # Check for userName
     try:
@@ -58,7 +58,7 @@ def is_json_allowed(data: dict) -> tuple:
     except KeyError as e:
         err_log.warning(e)
         err_log.warning("No userName")
-        return ("No userName", 400)
+        return (400)
 
     # Check for env
     try:
@@ -66,7 +66,7 @@ def is_json_allowed(data: dict) -> tuple:
     except KeyError as e:
         err_log.warning(e)
         err_log.warning("No env")
-        return ("No env", 400)
+        return (400)
 
     return ("JSON response accepted", 200)
 
@@ -140,7 +140,7 @@ def getParams():
 
     # Validate env
     if git_uri is None:
-        return ("Invalid env", 400)
+        return (400)
 
     # Generate directory name
     target_dir = generate_directory_name(request.json)
@@ -201,10 +201,7 @@ def putParams():
         err_log.warning(
             f"{target_dir} does not exist. Bad JSON request. \n {request.json}"
         )
-        return (
-            "Something went wrong. Please ensure your authToken, userName and env are the same as when you created your clone.",
-            400,
-        )
+        return (400)
 
     # Add last modified data to each param
     params = file.last_modified(request.json)
