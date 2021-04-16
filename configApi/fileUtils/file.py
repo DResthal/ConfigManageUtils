@@ -85,13 +85,11 @@ def last_modified(params: dict, user: str) -> dict:
     data: The entire params dict from request.json
     """
     date = datetime.now().strftime("%m-%d-%Y %H:%M:%S")
-    
+
     for key in params.keys():
         params[key].update({"last_modified": {"date": date, "user": user}})
 
     return params
-    
-
 
 
 # Convert JSON to yaml and write to file.

@@ -21,15 +21,21 @@ if not os.path.exists(str(parent_path) + "/logs/"):
 
 # Logger Setup
 app_log = CustomLogger(
-    name="application_log", log_file=f"{str(parent_path)}/logs/application.log", level=logging.INFO
+    name="application_log",
+    log_file=f"{str(parent_path)}/logs/application.log",
+    level=logging.INFO,
 ).create_logger()
 
 err_log = CustomLogger(
-    name="error_log", log_file=f"{str(parent_path)}/logs/error.log", level=logging.WARNING
+    name="error_log",
+    log_file=f"{str(parent_path)}/logs/error.log",
+    level=logging.WARNING,
 ).create_logger()
 
 git_log = CustomLogger(
-    name="git_log", log_file=f"{str(parent_path)}/logs/git.log", level=logging.INFO
+    name="git_log",
+    log_file=f"{str(parent_path)}/logs/git.log",
+    level=logging.INFO,
 ).create_logger()
 
 app_log.info("Application started.")
@@ -50,7 +56,7 @@ def is_json_allowed(data: dict) -> tuple:
     except KeyError as e:
         err_log.warning(e)
         err_log.warning("No authToken")
-        return (400)
+        return 400
 
     # Check for userName
     try:
@@ -58,7 +64,7 @@ def is_json_allowed(data: dict) -> tuple:
     except KeyError as e:
         err_log.warning(e)
         err_log.warning("No userName")
-        return (400)
+        return 400
 
     # Check for env
     try:
@@ -66,7 +72,7 @@ def is_json_allowed(data: dict) -> tuple:
     except KeyError as e:
         err_log.warning(e)
         err_log.warning("No env")
-        return (400)
+        return 400
 
     return ("JSON response accepted", 200)
 
@@ -140,7 +146,7 @@ def getParams():
 
     # Validate env
     if git_uri is None:
-        return (400)
+        return 400
 
     # Generate directory name
     target_dir = generate_directory_name(request.json)
@@ -201,10 +207,12 @@ def putParams():
         err_log.warning(
             f"{target_dir} does not exist. Bad JSON request. \n {request.json}"
         )
-        return (400)
+        return 400
 
     # Add last modified data to each param
-    params = file.last_modified(request.json["parameters"], request.json["userInfo"]["userName"])
+    params = file.last_modified(
+        request.json["parameters"], request.json["userInfo"]["userName"]
+    )
 
     # Encrypt secret parameters
     enc_params = file.check_secret(json.dumps(params), delete=True)
