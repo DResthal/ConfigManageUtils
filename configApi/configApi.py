@@ -7,24 +7,29 @@ import config
 import json
 import logging
 import os
+import pathlib
 
 app = Flask(__name__)
 app.config.from_object(config.Dev)
 load_dotenv()
 t_filepath = "git_repo/example.yml"
+parent_path = pathlib.Path(__file__).parent.absolute()
 
+# Check for and create log folder
+if not os.path.exists(str(parent_path) + "/logs/"):
+    os.mkdir(str(parent_path) + "/logs/")
 
 # Logger Setup
 app_log = CustomLogger(
-    name="application_log", log_file="logs/application.log", level=logging.INFO
+    name="application_log", log_file=f"{str(parent_path)}/logs/application.log", level=logging.INFO
 ).create_logger()
 
 err_log = CustomLogger(
-    name="error_log", log_file="logs/error.log", level=logging.WARNING
+    name="error_log", log_file=f"{str(parent_path)}/logs/error.log", level=logging.WARNING
 ).create_logger()
 
 git_log = CustomLogger(
-    name="git_log", log_file="logs/git.log", level=logging.INFO
+    name="git_log", log_file=f"{str(parent_path)}/logs/git.log", level=logging.INFO
 ).create_logger()
 
 app_log.info("Application started.")
