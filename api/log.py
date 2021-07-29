@@ -1,9 +1,10 @@
-# Provide an easy way to setup multiple loggers (only for remaining DRY)
 import logging
 import sys
 
 
 class CustomLogger:
+    """Provides an easy class to setup multiple loggers in a single project."""
+
     def __init__(
         self,
         name: str,
