@@ -1,23 +1,16 @@
 import logging
-from typing_extensions import ParamSpecKwargs
-from flask import Flask, g, request
+from flask import Flask, g, request, current_app
 from .extensions import authorized
+from flask_migrate import Migrate
 import os
 from . import log
-import sys
 
 
 def create_app(test_config=None):
 
     app = Flask(__name__, instance_relative_config=True)
 
-    if test_config is not None:
-        app.config.from_object(test_config)
-
-    try:
-        app.config.from_pyfile("dev.py", silent=True)
-    except:
-        pass
+    app.config.from_pyfile("dev.py")
 
     # Instance directory and logging setup
     try:
@@ -61,6 +54,12 @@ def create_app(test_config=None):
 
     # Application setup
     with app.app_context():
+        from .extensions import conn
+        
+        db = conn
+        db.init_app(app)
+        migrate = Migrate(app, db)
+        ma = extensions.ma.init_app(app)
 
         @app.route("/", methods=["GET"])
         @authorized
