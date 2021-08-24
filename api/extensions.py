@@ -20,25 +20,25 @@ def authorized(func):
         data = request.json
 
         if not data["authToken"]:
-            return "Not Allowed", 403
+            return "Unauthorized", 402
 
         if not data["userInfo"]["userName"]:
-            return "Not Allowed", 403
+            return "Unauthorized", 402
 
         if data["authToken"] != current_app.config["AUTHTOKEN"]:
-            return "Not Allowed", 403
+            return "Unauthorized", 402
 
         return func(*args, **kwargs)
 
     return auth_wrapper
 
 
-@click.command("create-db")
+@click.command("create-conn")
 @with_appcontext
-def create_db():
-    db.create_all()
+def create_conn():
+    conn.create_all()
     click.echo("Tables created.")
 
 
 def add_app(app):
-    app.cli.add_command(create_db)
+    app.cli.add_command(create_conn)
