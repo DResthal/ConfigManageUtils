@@ -10,7 +10,11 @@ def create_app(test_config=None):
 
     app = Flask(__name__, instance_relative_config=True)
 
-    app.config.from_pyfile("dev.py")
+    try:
+        app.config.from_pyfile("dev.py")
+        print("Dev config loaded")
+    except:
+        pass
 
     # Instance directory and logging setup
     try:

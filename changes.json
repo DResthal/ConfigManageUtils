@@ -1,0 +1,20 @@
+{
+  "authToken": "FXbWZBmGstqCJP8D7P3kzguthu479dFv",
+  "userInfo": {
+    "userName": "nclack",
+    "userEmail": "testing@gmail.com"
+  },
+  "env": "test",
+  "parameters": {
+    "a": {
+      "value": "some dumb value",
+      "secret": true,
+      "comment": "some dumb comment"
+    },
+    "b": {
+      "value": "another dumb value",
+      "secret": false,
+      "comment": "another dumb comment"
+    }
+  }
+}
