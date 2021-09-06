@@ -1,11 +1,10 @@
-from api.extensions import conn, ma
+from marshmallow_sqlalchemy.schema import auto_field
+from api.extensions import db, ma
 from datetime import datetime
 
-db = conn
 
-
-class ParamUpdate(db.Model):
-    __tablename__ = "paramupdates"
+class Updates(db.Model):
+    __tablename__ = "updates"
 
     id = db.Column(db.Integer(), primary_key=True)
     datetime = db.Column(db.DateTime(), default=datetime.utcnow())
@@ -15,10 +14,20 @@ class ParamUpdate(db.Model):
     comment = db.Column(db.Text, nullable=True)
 
 
-class Param(db.Model):
+class Params(db.Model):
     __tablename__ = "params"
 
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(30), nullable=False)
     value = db.Column(db.String(30), nullable=False)
     secret = db.Column(db.Boolean, nullable=False)
+
+class UpdateSchema(ma.SQLAlchemyAutoSchema):
+    class meta:
+        model = Updates
+
+
+class ParamSchema(ma.SQLAlchemyAutoSchema):
+    class meta:
+        model = Params
+        

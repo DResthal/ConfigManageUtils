@@ -1,4 +1,5 @@
-POST http://localhost:5000/params/get HTTP/1.1
+###
+POST http://localhost:5000/get HTTP/1.1
 content-type: Application/json
 
 {
@@ -6,24 +7,11 @@ content-type: Application/json
   "userInfo": {
     "userName": "nclack",
     "userEmail": "testing@gmail.com"
-  },
-  "env": "test",
-  "parameters": {
-    "a": {
-      "value": "some dumb value",
-      "secret": true,
-      "comment": "some dumb comment"
-    },
-    "b": {
-      "value": "another dumb value",
-      "secret": false,
-      "comment": "another dumb comment"
-    }
   }
 }
 
 ###
-POST http://localhost:5000/params/post HTTP/1.1
+POST http://localhost:5000/post HTTP/1.1
 content-type: Application/json
 
 {

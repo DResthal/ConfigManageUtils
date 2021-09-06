@@ -58,11 +58,11 @@ def create_app(test_config=None):
 
     # Application setup
     with app.app_context():
-        from .extensions import conn
+        from .extensions import db
         from .params.routes import params
 
         app.register_blueprint(params)
-        db = conn
+        db = db
         db.init_app(app)
         migrate = Migrate(app, db)
         ma = extensions.ma.init_app(app)

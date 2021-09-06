@@ -1,7 +1,7 @@
 from flask import Blueprint, request
-from api.extensions import authorized, conn, ma
+from api.extensions import authorized, db, ma
 import json
-from .models import ParamUpdate, Param
+from .models import Updates, Params, UpdateSchema, ParamSchema
 
 
 params = Blueprint("params", __name__)
@@ -14,9 +14,12 @@ def get():
     if request.method != "POST":
         return "Method not allowed", 405
 
-    changes = ParamUpdate().query.all()
+    params = Params.query.first()
+    schema = ParamSchema()
 
-    return "ok", 200
+    print(schema.dump(params))
+
+    return "OK", 200
 
 
 # Save param changes to db

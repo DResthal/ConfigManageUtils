@@ -10,7 +10,7 @@ from flask_marshmallow import Marshmallow
 
 e_log = getLogger("elog")
 a_log = getLogger("alog")
-conn = SQLAlchemy()
+db = SQLAlchemy()
 ma = Marshmallow()
 
 
@@ -43,12 +43,12 @@ def env_req(func):
     return env_wrapper
 
 
-@click.command("create-conn")
+@click.command("create-db")
 @with_appcontext
-def create_conn():
-    conn.create_all()
+def create_db():
+    db.create_all()
     click.echo("Tables created.")
 
 
 def add_app(app):
-    app.cli.add_command(create_conn)
+    app.cli.add_command(create_db)
