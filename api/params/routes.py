@@ -1,39 +1,65 @@
 from flask import Blueprint, request
-from api.extensions import authorized, db, ma
+from api.extensions import authorized, db
 import json
-from .models import Updates, Params, UpdateSchema, ParamSchema
+from .models import Updates, Params, UpdatesSchema, ParamsSchema
+import sys
+from logging import getLogger
 
 
 params = Blueprint("params", __name__)
-
-
-# Get current params from db/store
-@params.route("/get", methods=["POST"])
-@authorized
+err_log = getLogger("elog")
+app_log = getLogger("alog")
+ 
+# Get current params from db
+@params.route("/get", methods=["GET"])
+#@authorized
 def get():
-    if request.method != "POST":
-        return "Method not allowed", 405
+        try:
+            params = Params.query.all()
+        except:
+            err_log.warning(sys.exc_info())
+            print("Unable to get params from db")
+            pass
 
-    params = Params.query.first()
-    schema = ParamSchema()
+        params_schema = ParamsSchema(many=True)
 
-    print(schema.dump(params))
+        try:
+            params_schema.validate(params)
+            print(params_schema.validate(params))
+        except:
+            err_log.warning(sys.exc_info())
+            print("Unable to validate data.")
+            pass
 
-    return "OK", 200
-
+        return params_schema.dumps(params), 200
 
 # Save param changes to db
 @params.route("/save", methods=["POST"])
 def pull():
-    if request.method != "POST":
-        return "Method not allowed", 405
+    data = request.json["parameters"]
 
-    params = request.json
+    try:
+        new_params = Params(**data)
+    except:
+        err_log.warning(sys.exc_info())
+        pass
 
-    with open("changes.json", "a") as f:
-        f.write(json.dumps(params, sort_keys=False, indent=2))
+    try:
+        db.session.add(new_params)
+        app_log.info("Added new params")
+        db.session.commit()
+        app_log.info("Saved to db")
+    except:
+        err_log.warning(sys.exc_info())
+        pass
 
-    return "ok", 200
+    try:
+        ParamsSchema(many=True).validate(new_params)
+    except:
+        err_log.warning(sys.exc_info())
+        pass
+
+    return "OK", 200
 
 
 # save param changes to .json file, add to git and create pr
