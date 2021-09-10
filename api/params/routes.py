@@ -11,8 +11,8 @@ err_log = getLogger("elog")
 app_log = getLogger("alog")
  
 # Get current params from db
-@params.route("/get", methods=["GET"])
-#@authorized
+@params.route("/get", methods=["POST"])
+@authorized
 def get():
         try:
             params = Params.query.all()
@@ -31,7 +31,7 @@ def get():
             print("Unable to validate data.")
             pass
 
-        return params_schema.dumps(params), 200
+        return params_schema.dumps(params, many=True), 200
 
 # Save param changes to db
 @params.route("/save", methods=["POST"])

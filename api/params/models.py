@@ -25,10 +25,10 @@ class Params(db.Model):
 
 
 class UpdatesSchema(ma.SQLAlchemyAutoSchema):
-    class meta:
+    class Meta:
         model = Updates
 
 
 class ParamsSchema(ma.SQLAlchemyAutoSchema):
-    class meta:
+    class Meta:
         model = Params

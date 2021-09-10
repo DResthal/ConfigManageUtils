@@ -1,8 +1,4 @@
 ###
-GET http://localhost:5000/get HTTP/1.1
-
-
-###
 # Return ALL params stored in params table
 POST http://localhost:5000/get HTTP/1.1
 content-type: Application/json
@@ -27,8 +23,8 @@ content-type: Application/json
     "userEmail": "testing@gmail.com"
   },
   "parameters": {
-    "name": "app4",
-    "value": "Some fourth dumbass value here",
-    "secret": true
+    "name": "app2",
+    "value": "Some other dumbass value here",
+    "secret": false
   }
 }
