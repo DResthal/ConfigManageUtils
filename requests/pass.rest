@@ -22,9 +22,32 @@ content-type: Application/json
     "userName": "nclack",
     "userEmail": "testing@gmail.com"
   },
-  "parameters": {
+  "parameters": [{
     "name": "app2",
     "value": "Some other dumbass value here",
     "secret": false
-  }
+  }]
+}
+
+###
+
+POST http://localhost:5000/save HTTP/1.1
+content-type: Application/json
+
+{
+  "authToken": "FXbWZBmGstqCJP8D7P3kzguthu479dFv",
+  "userInfo": {
+    "userName": "nclack",
+    "userEmail": "testing@gmail.com"
+  },
+  "parameters": [{
+    "name": "app69",
+    "value": "I dunno, something has to go here...",
+    "secret": false
+  },
+  {
+    "name":"app76",
+    "value":"Fallout",
+    "secret":true
+  }]
 }

@@ -36,28 +36,23 @@ def get():
 # Save param changes to db
 @params.route("/save", methods=["POST"])
 def pull():
-    data = request.json["parameters"]
+    
+    for r in request.json["parameters"]:
+        try:
+            new_param = Params(**r)
+        except:
+            err_log.warning(sys.exc_info())
+            pass
 
-    try:
-        new_params = Params(**data)
-    except:
-        err_log.warning(sys.exc_info())
-        pass
-
-    try:
-        db.session.add(new_params)
-        app_log.info("Added new params")
-        db.session.commit()
-        app_log.info("Saved to db")
-    except:
-        err_log.warning(sys.exc_info())
-        pass
-
-    try:
-        ParamsSchema(many=True).validate(new_params)
-    except:
-        err_log.warning(sys.exc_info())
-        pass
+        try:
+            db.session.add(new_param)
+            app_log.info("New parameter added to session")
+            db.session.commit()
+            app_log.info("Param saved to database")
+        except:
+            err_log(sys.exc_info())
+            pass
+        
 
     return "OK", 200
 

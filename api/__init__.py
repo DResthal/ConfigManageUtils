@@ -42,14 +42,14 @@ def create_app(test_config=None):
         """%(asctime)s %(levelno)s:%(levelname)s %(message)s"""
     )
 
-    a_log = log.CustomLogger(
+    app_log = log.CustomLogger(
         name="alog",
         log_file=os.path.join(log_dir, "application.log"),
         level=logging.INFO,
         formatter=logging.Formatter(application_formatter),
     ).create_logger()
 
-    e_log = log.CustomLogger(
+    err_log = log.CustomLogger(
         name="elog",
         log_file=os.path.join(log_dir, "error.log"),
         level=logging.WARNING,
@@ -60,6 +60,8 @@ def create_app(test_config=None):
     with app.app_context():
         from .extensions import db
         from .params.routes import params
+
+        app_log.info("Application started")
 
         app.register_blueprint(params)
         db = db

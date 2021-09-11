@@ -18,8 +18,7 @@ class Updates(db.Model):
 class Params(db.Model):
     __tablename__ = "params"
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(30), nullable=False)
+    name = db.Column(db.String(30), nullable=False, primary_key=True)
     value = db.Column(db.String(30), nullable=False)
     secret = db.Column(db.Boolean, nullable=False)
 
