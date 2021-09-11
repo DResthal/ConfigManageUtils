@@ -1,6 +1,6 @@
 ###
 # Return ALL params stored in params table
-POST http://localhost:5000/get HTTP/1.1
+POST http://localhost:5000/getparams HTTP/1.1
 content-type: Application/json
 
 {
@@ -12,7 +12,21 @@ content-type: Application/json
 }
 
 ###
+# Return ALL updates
+POST http://localhost:5000/getupdates HTTP/1.1
+content-type: Application/json
 
+{
+  "authToken": "FXbWZBmGstqCJP8D7P3kzguthu479dFv",
+  "userInfo": {
+    "userName": "nclack",
+    "userEmail": "testing@gmail.com"
+  }
+}
+
+
+###
+# Create a single new parameter
 POST http://localhost:5000/save HTTP/1.1
 content-type: Application/json
 
@@ -30,7 +44,7 @@ content-type: Application/json
 }
 
 ###
-
+# Create several new parameters
 POST http://localhost:5000/save HTTP/1.1
 content-type: Application/json
 
@@ -43,11 +57,25 @@ content-type: Application/json
   "parameters": [{
     "name": "app69",
     "value": "I dunno, something has to go here...",
-    "secret": false
+    "secret": false,
+    "comment": "I nearly forgot about comments commpletely!"
   },
   {
     "name":"app76",
     "value":"Fallout",
-    "secret":true
+    "secret":true,
+    "comment": "That would have ruined the whole app!"
   }]
+}
+
+###
+POST http://localhost:5000/post HTTP/1.1
+content-type: Application/json
+
+{
+  "authToken": "FXbWZBmGstqCJP8D7P3kzguthu479dFv",
+  "userInfo": {
+    "userName": "nclack",
+    "userEmail": "testing@gmail.com"
+  }
 }

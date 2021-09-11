@@ -9,6 +9,7 @@ class Updates(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     datetime = db.Column(db.DateTime(), default=datetime.utcnow())
     username = db.Column(db.String(30), nullable=False)
+    useremail = db.Column(db.String(60), nullable=False)
     name = db.Column(db.String(30), nullable=False)
     value = db.Column(db.String(60), nullable=False)
     secret = db.Column(db.Boolean, nullable=False)
