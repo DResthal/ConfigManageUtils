@@ -56,9 +56,9 @@ content-type: Application/json
   },
   "parameters": [{
     "name": "app69",
-    "value": "I dunno, something has to go here...",
+    "value": "this is a NEW value",
     "secret": false,
-    "comment": "I nearly forgot about comments commpletely!"
+    "comment": "and just some dumb comment"
   },
   {
     "name":"app76",

@@ -9,20 +9,21 @@ from logging import getLogger
 params = Blueprint("params", __name__)
 err_log = getLogger("elog")
 app_log = getLogger("alog")
- 
+
 # Get current params from db
 @params.route("/getparams", methods=["POST"])
 @authorized
 def get():
-        try:
-            params = Params.query.all()
-        except:
-            err_log.warning(sys.exc_info())
-            return "Unable to query params", 500
+    try:
+        params = Params.query.all()
+    except:
+        err_log.warning(sys.exc_info())
+        return "Unable to query params", 500
 
-        params_schema = ParamsSchema(many=True)
+    params_schema = ParamsSchema(many=True)
 
-        return params_schema.dumps(params, many=True), 200
+    return params_schema.dumps(params, many=True), 200
+
 
 @params.route("/getupdates", methods=["POST"])
 @authorized
@@ -36,6 +37,7 @@ def get_updates():
     updates_schema = UpdatesSchema(many=True)
 
     return updates_schema.dumps(updates), 200
+
 
 # Save param changes to db
 @params.route("/save", methods=["POST"])
@@ -53,29 +55,64 @@ def pull():
         return "Inavalide request content", 404
 
     for p in param_updates:
-        update = {
-            "username":user_info["userName"],
-            "useremail":user_info["userEmail"],
-            "name":p["name"],
-            "value":p["value"],
-            "secret":p["secret"],
-            "comment":p["comment"]
-        }
+        try:
+            update = {
+                "username": user_info["userName"],
+                "useremail": user_info["userEmail"],
+                "name": p["name"],
+                "value": p["value"],
+                "secret": p["secret"],
+                "comment": p["comment"],
+            }
+        except json.JSONDecodeError as e:
+            err_log.warning(e)
+            return "Unable to create update dict, likely missing fields", 404
+
+        try:
+            param = {
+                "name": p["name"],
+                "value": p["value"],
+                "secret": p["secret"],
+            }
+        except json.JSONDecodeError as e:
+            err_log.warning(e)
+            return (
+                """Unable to create parameter dict, likely missing fields. 
+                \nThis error should never exist, if you see this, something has gone terribly wrong!!! 
+                \nPlease contact the administrator and/or developer(s)""",
+                404,
+            )
 
         try:
             new_update = Updates(**update)
+            app_log.info("Updates object created, ready for database entry.")
         except:
             err_log.warning(sys.exc_info())
-            return "Unable to create instance of Updates table entry", 500
+            return "Unable to create Updates object", 500
 
         try:
             db.session.add(new_update)
             db.session.commit()
+            app_log.info("Database entry created on table updates")
         except:
             err_log.warning(sys.exc_info())
             return "Unable to save to databases", 500
 
+        try:
+            new_param = Params(**param)
+            app_log.info("Params object create, ready for database entry")
+        except:
+            err_log.warning(sys.exc_info())
+            return "Unable to create Params object", 500
+
+        try:
+            db.session.merge(new_param)
+        except:
+            err_log.warning(sys.exc_info())
+            return "Unable to save Params object to the database. Refer to logs", 500
+
     return "OK", 200
+
 
 # save param changes to .json file, add to git and create pr
 @authorized
