@@ -4,6 +4,7 @@ import json
 from .models import Updates, Params, UpdatesSchema, ParamsSchema
 import sys
 from logging import getLogger
+from sqlalchemy.exc import IntegrityError
 
 
 params = Blueprint("params", __name__)
@@ -22,7 +23,7 @@ def get():
 
     params_schema = ParamsSchema(many=True)
 
-    return params_schema.dumps(params, many=True), 200
+    return params_schema.dumps(params), 200
 
 
 @params.route("/getupdates", methods=["POST"])
@@ -40,8 +41,9 @@ def get_updates():
 
 
 # Save param changes to db
+@authorized
 @params.route("/save", methods=["POST"])
-def pull():
+def save():
     try:
         user_info = request.json["userInfo"]
     except json.JSONDecodeError as e:
@@ -53,6 +55,8 @@ def pull():
     except json.JSONDecodeError as e:
         err_log.warning(e)
         return "Inavalide request content", 404
+
+    updates_list = []
 
     for p in param_updates:
         try:
@@ -68,11 +72,14 @@ def pull():
             err_log.warning(e)
             return "Unable to create update dict, likely missing fields", 404
 
+        updates_list.append(update)
+
         try:
             param = {
                 "name": p["name"],
                 "value": p["value"],
                 "secret": p["secret"],
+                "comment": p["comment"],
             }
         except json.JSONDecodeError as e:
             err_log.warning(e)
@@ -83,35 +90,34 @@ def pull():
                 404,
             )
 
-        try:
-            new_update = Updates(**update)
-            app_log.info("Updates object created, ready for database entry.")
-        except:
-            err_log.warning(sys.exc_info())
-            return "Unable to create Updates object", 500
+        app_log.info(json.dumps(update, sort_keys=True, indent=4))
+        app_log.info(json.dumps(param, sort_keys=True, indent=4))
 
         try:
+            new_update = Updates(**update)
             db.session.add(new_update)
             db.session.commit()
-            app_log.info("Database entry created on table updates")
+            app_log.info("Database entry created on table: updates")
         except:
             err_log.warning(sys.exc_info())
-            return "Unable to save to databases", 500
+            return "Unable to save updates to database", 500
 
         try:
             new_param = Params(**param)
-            app_log.info("Params object create, ready for database entry")
-        except:
-            err_log.warning(sys.exc_info())
-            return "Unable to create Params object", 500
-
-        try:
+            db.session.add(new_param)
+            db.session.commit()
+            app_log.info("Database entry created on table: params")
+        except IntegrityError as e:
+            err_log.warning(e)
+            app_log.warning("Attempting to update existing record instead.")
+            db.session.rollback()
             db.session.merge(new_param)
+            app_log.info("Updated existing entry on table: params")
         except:
             err_log.warning(sys.exc_info())
-            return "Unable to save Params object to the database. Refer to logs", 500
+            return "Unable to save params to database", 500
 
-    return "OK", 200
+    return json.dumps(updates_list), 200
 
 
 # save param changes to .json file, add to git and create pr
@@ -128,15 +134,15 @@ def post():
 
 
 # Send changes to aws parameter store
+@authorized
 @params.route("/store", methods=["POST"])
 def store():
-    if request.method != "POST":
-        return "Method not allowed", 405
 
     pass
 
 
 # Return differences between test and prod
+@authorized
 @params.route("/compare", methods=["POST"])
 def compare():
     pass
