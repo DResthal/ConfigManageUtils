@@ -5,6 +5,7 @@ from .models import Updates, Params, UpdatesSchema, ParamsSchema
 import sys
 from logging import getLogger
 from sqlalchemy.exc import IntegrityError
+from .functions import enc
 
 
 params = Blueprint("params", __name__)
@@ -146,3 +147,10 @@ def store():
 @params.route("/compare", methods=["POST"])
 def compare():
     pass
+
+
+@params.route("/test", methods=["GET"])
+def test():
+    test = enc("Hello World")
+    print(test)
+    return "OK", 200
