@@ -1,7 +1,0 @@
-AUTHTOKEN = "<aws key>"
-TESTREPO = "DralrinResthal/TestRepo"
-PRODREPO = "DralrinResthal/ProdRepo"
-GITHUB_TOKEN = "<github auth token>"
-SECRET_KEY = "<secret key>"
-SQLALCHEMY_DATABASE_URI = "sqlite:///dev.sqlite"
-SQLALCHEMY_TRACK_MODIFICATIONS = False
