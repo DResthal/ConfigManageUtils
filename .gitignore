@@ -138,3 +138,5 @@ git_repo/
 
 .env
 params.json
+.aws.config
+.aws.credentials
