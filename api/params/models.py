@@ -1,6 +1,6 @@
 from api.extensions import db, ma
 from datetime import datetime
-from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
 
 class Updates(db.Model):
@@ -22,13 +22,14 @@ class Params(db.Model):
     name = db.Column(db.String(30), nullable=False, primary_key=True)
     value = db.Column(db.String(30), nullable=False)
     secret = db.Column(db.Boolean, nullable=False)
+    comment = db.Column(db.Text, nullable=False, default="")
 
 
-class UpdatesSchema(ma.SQLAlchemyAutoSchema):
+class UpdatesSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = Updates
 
 
-class ParamsSchema(ma.SQLAlchemyAutoSchema):
+class ParamsSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = Params
