@@ -136,4 +136,5 @@ git_repo/
 .log
 .vscode/
 
-env
+.env
+params.json
