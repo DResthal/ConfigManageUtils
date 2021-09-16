@@ -140,3 +140,4 @@ git_repo/
 params.json
 .aws.config
 .aws.credentials
+.db
