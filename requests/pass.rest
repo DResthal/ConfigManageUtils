@@ -79,3 +79,6 @@ content-type: Application/json
     "userEmail": "testing@gmail.com"
   }
 }
+
+###
+GET http://localhost:5000/test HTTP/1.1
