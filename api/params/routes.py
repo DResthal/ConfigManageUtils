@@ -12,6 +12,15 @@ params = Blueprint("params", __name__)
 err_log = getLogger("elog")
 app_log = getLogger("alog")
 
+
+def redacted(data: list) -> list:
+    for i in data:
+        if i["secret"]:
+            i["value"] = "REDACTED"
+
+    return data
+
+
 # Get current params from db
 @params.route("/getparams", methods=["POST"])
 @authorized
@@ -24,7 +33,7 @@ def get():
 
     params_schema = ParamsSchema(many=True)
 
-    return params_schema.dumps(params), 200
+    return json.dumps(redacted(json.loads(params_schema.dumps(params)))), 200
 
 
 @params.route("/getupdates", methods=["POST"])
@@ -38,7 +47,7 @@ def get_updates():
 
     updates_schema = UpdatesSchema(many=True)
 
-    return updates_schema.dumps(updates), 200
+    return json.dumps(redacted(json.loads(updates_schema.dumps(updates)))), 200
 
 
 # Save param changes to db
@@ -122,7 +131,7 @@ def save():
             err_log.warning(sys.exc_info())
             return "Unable to save params to database", 500
 
-    return json.dumps(updates_list), 200
+    return json.dumps(redacted(updates_list)), 200
 
 
 # save param changes to .json file, add to git and create pr
