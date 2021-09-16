@@ -38,10 +38,6 @@ def get_updates():
 
     updates_schema = UpdatesSchema(many=True)
 
-    for param in updates:
-        if param["secret"]:
-            param["valute"] = dec(param["value"])
-
     return updates_schema.dumps(updates), 200
 
 
