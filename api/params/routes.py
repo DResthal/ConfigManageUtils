@@ -5,7 +5,7 @@ from .models import Updates, Params, UpdatesSchema, ParamsSchema
 import sys
 from logging import getLogger
 from sqlalchemy.exc import IntegrityError
-from .functions import enc
+from .functions import enc, dec
 
 
 params = Blueprint("params", __name__)
@@ -38,6 +38,10 @@ def get_updates():
 
     updates_schema = UpdatesSchema(many=True)
 
+    for param in updates:
+        if param["secret"]:
+            param["valute"] = dec(param["value"])
+
     return updates_schema.dumps(updates), 200
 
 
@@ -60,6 +64,10 @@ def save():
     updates_list = []
 
     for p in param_updates:
+
+        if p["secret"]:
+            p["value"] = enc(p["value"])
+
         try:
             update = {
                 "username": user_info["userName"],
@@ -149,8 +157,11 @@ def compare():
     pass
 
 
+# This route temporarily exists as a place to test functions
 @params.route("/test", methods=["GET"])
 def test():
     test = enc("Hello World")
-    print(test)
+    print(f"Encrypted string: {test}")
+    string = dec(test)
+    print(f"Decrypted string: {string}")
     return "OK", 200
