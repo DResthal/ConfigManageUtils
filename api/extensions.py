@@ -1,7 +1,4 @@
-import json
-from flask import request, g, current_app
-from flask.cli import with_appcontext
-import click
+from flask import request, current_app
 from logging import getLogger
 from functools import wraps
 from flask_sqlalchemy import SQLAlchemy
@@ -41,14 +38,3 @@ def env_req(func):
         return func(*args, **kwargs)
 
     return env_wrapper
-
-
-@click.command("create-db")
-@with_appcontext
-def create_db():
-    db.create_all()
-    click.echo("Tables created.")
-
-
-def add_app(app):
-    app.cli.add_command(create_db)

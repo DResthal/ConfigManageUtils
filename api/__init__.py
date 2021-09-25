@@ -1,5 +1,5 @@
 import logging
-from flask import Flask, g, request, current_app
+from flask import Flask, g, request
 from .extensions import authorized
 from flask_migrate import Migrate
 import os
