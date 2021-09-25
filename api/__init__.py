@@ -58,21 +58,19 @@ def create_app(test_config=None):
 
     # Application setup
     with app.app_context():
-        from .extensions import db
+        from .extensions import db, ma
         from .params.routes import params
 
         app_log.info("Application started")
 
         app.register_blueprint(params)
-        db = db
         db.init_app(app)
         migrate = Migrate(app, db)
-        ma = extensions.ma.init_app(app)
+        ma = ma.init_app(app)
 
-        @app.route("/", methods=["GET"])
+        @app.route("/test", methods=["GET"])
         @authorized
         def test():
-            g.data = request.json
             return "Working", 200
 
         return app
