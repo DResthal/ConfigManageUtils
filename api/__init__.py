@@ -1,9 +1,8 @@
 import logging
 from flask import Flask
-from .extensions import authorized
 from flask_migrate import Migrate
 import os
-from . import log
+from .log import CustomLogger
 
 
 def create_app(test_config=None):
@@ -30,29 +29,21 @@ def create_app(test_config=None):
     try:
         os.makedirs(log_dir)
     except OSError:
-        print(
-            """Unable to create logs directory. Either the directory already exists,
-        the instance path does not exist (run again to fix), or an os error has occurred preventing the creation of the directory."""
-        )
         pass
 
-    from . import log
-
-    error_formatter = """%(asctime)s %(levelno)s:%(levelname)s %(filename)s %(lineno)d
+    error_formatter = """%(asctime)s %(levelname)s: %(filename)s %(lineno)d
         %(message)s"""
 
-    application_formatter = (
-        """%(asctime)s %(levelno)s:%(levelname)s %(message)s"""
-    )
+    application_formatter = """%(asctime)s %(levelname)s: %(message)s"""
 
-    app_log = log.CustomLogger(
+    app_log = CustomLogger(
         name="alog",
         log_file=os.path.join(log_dir, "application.log"),
         level=logging.INFO,
         formatter=logging.Formatter(application_formatter),
     ).create_logger()
 
-    err_log = log.CustomLogger(
+    err_log = CustomLogger(
         name="elog",
         log_file=os.path.join(log_dir, "error.log"),
         level=logging.WARNING,
@@ -67,12 +58,18 @@ def create_app(test_config=None):
         app_log.info("Application started")
 
         app.register_blueprint(params)
-        db.init_app(app)
         migrate = Migrate(app, db)
+        db.init_app(app)
         ma = ma.init_app(app)
 
         @app.route("/sanitycheck", methods=["GET"])
         def test():
+            app_log.info(
+                "Sanity check route accessed. Application is running! If you see this, the application log is working correctly."
+            )
+            err_log.warning(
+                "Sanity check route accessed. Application is running! If you see this, the error log is working correctly."
+            )
             return "Working", 200
 
         return app
