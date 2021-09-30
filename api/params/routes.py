@@ -136,19 +136,6 @@ def save():
     return json.dumps(redacted(updates_list)), 200
 
 
-# save param changes to .json file, add to git and create pr
-@basic_auth.required
-@params.route("/post", methods=["POST"])
-def post():
-    params = Params.query.all()
-    params_schema = ParamsSchema(many=True)
-
-    with open("params.json", "w") as f:
-        f.write(params_schema.dumps(params, sort_keys=True, indent=4))
-
-    return "ok", 200
-
-
 # Send changes to aws parameter store
 @basic_auth.required
 @params.route("/store", methods=["POST"])
