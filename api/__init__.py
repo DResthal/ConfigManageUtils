@@ -1,5 +1,5 @@
 import logging
-from flask import Flask, g, request
+from flask import Flask
 from .extensions import authorized
 from flask_migrate import Migrate
 import os
@@ -10,11 +10,14 @@ def create_app(test_config=None):
 
     app = Flask(__name__, instance_relative_config=True)
 
-    try:
-        app.config.from_pyfile("dev.py")
-        print("Dev config loaded")
-    except:
-        pass
+    if test_config is not None:
+        app.config.from_object(test_config)
+    else:
+        try:
+            app.config.from_pyfile("dev.py")
+            print("Loaded custom configuration")
+        except:
+            pass
 
     # Instance directory and logging setup
     try:
@@ -68,8 +71,7 @@ def create_app(test_config=None):
         migrate = Migrate(app, db)
         ma = ma.init_app(app)
 
-        @app.route("/test", methods=["GET"])
-        @authorized
+        @app.route("/sanitycheck", methods=["GET"])
         def test():
             return "Working", 200
 

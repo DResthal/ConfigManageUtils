@@ -1,10 +1,10 @@
 ###
 # Return ALL params stored in params table
 POST http://localhost:5000/getparams HTTP/1.1
+Authorization: Basic dXNlcm5hbWU=:cGFzc3dvcmQ=
 content-type: Application/json
 
 {
-  "authToken": "FXbWZBmGstqCJP8D7P3kzguthu479dFv",
   "userInfo": {
     "userName": "nclack",
     "userEmail": "testing@gmail.com"
@@ -14,10 +14,10 @@ content-type: Application/json
 ###
 # Return ALL updates
 POST http://localhost:5000/getupdates HTTP/1.1
+Authorization: Basic dXNlcm5hbWU=:cGFzc3dvcmQ=
 content-type: Application/json
 
 {
-  "authToken": "FXbWZBmGstqCJP8D7P3kzguthu479dFv",
   "userInfo": {
     "userName": "nclack",
     "userEmail": "testing@gmail.com"
@@ -28,52 +28,56 @@ content-type: Application/json
 ###
 # Create a single new parameter
 POST http://localhost:5000/save HTTP/1.1
+Authorization: Basic dXNlcm5hbWU=:cGFzc3dvcmQ=
 content-type: Application/json
 
 {
-  "authToken": "FXbWZBmGstqCJP8D7P3kzguthu479dFv",
   "userInfo": {
     "userName": "nclack",
     "userEmail": "testing@gmail.com"
   },
   "parameters": [{
-    "name": "app2",
-    "value": "Some other dumbass value here",
-    "secret": false
+    "name":"testing",
+    "prefix":"sprint100",
+    "value":"This is a new, unencrypted value",
+    "secret":false,
+    "comment": "Is this updating correctly...?"
   }]
 }
 
 ###
 # Create several new parameters
 POST http://localhost:5000/save HTTP/1.1
+Authorization: Basic dXNlcm5hbWU=:cGFzc3dvcmQ=
 content-type: Application/json
 
 {
-  "authToken": "FXbWZBmGstqCJP8D7P3kzguthu479dFv",
   "userInfo": {
     "userName": "nclack",
     "userEmail": "testing@gmail.com"
   },
   "parameters": [{
     "name": "app69",
+    "prefix": "sprint100",
     "value": "this is a NEW value",
     "secret": false,
-    "comment": "and just some dumb comment"
+    "comment": "another dumb comment"
   },
   {
     "name":"app76",
+    "prefix":"sprint100",
     "value":"Fallout",
     "secret":true,
-    "comment": "That would have ruined the whole app!"
+    "comment": "Is this updating correctly...?"
   }]
 }
 
 ###
 POST http://localhost:5000/post HTTP/1.1
+Authorization: Basic dXNlcm5hbWU=:cGFzc3dvcmQ=
 content-type: Application/json
 
 {
-  "authToken": "FXbWZBmGstqCJP8D7P3kzguthu479dFv",
   "userInfo": {
     "userName": "nclack",
     "userEmail": "testing@gmail.com"

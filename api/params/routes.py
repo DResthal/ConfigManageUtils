@@ -1,7 +1,8 @@
 from flask import Blueprint, request
-from api.extensions import authorized, db, ma
+from flask import current_app
+from api.extensions import db, basic_auth
 import json
-from .models import Updates, Params, UpdatesSchema, ParamsSchema
+from .models import *
 import sys
 from logging import getLogger
 from sqlalchemy.exc import IntegrityError
@@ -11,6 +12,7 @@ from .functions import enc, dec
 params = Blueprint("params", __name__)
 err_log = getLogger("elog")
 app_log = getLogger("alog")
+basic_auth.init_app(current_app)
 
 
 def redacted(data: list) -> list:
@@ -22,8 +24,8 @@ def redacted(data: list) -> list:
 
 
 # Get current params from db
+@basic_auth.required
 @params.route("/getparams", methods=["POST"])
-@authorized
 def get():
     try:
         params = Params.query.all()
@@ -36,8 +38,8 @@ def get():
     return json.dumps(redacted(json.loads(params_schema.dumps(params)))), 200
 
 
+@basic_auth.required
 @params.route("/getupdates", methods=["POST"])
-@authorized
 def get_updates():
     try:
         updates = Updates.query.all()
@@ -51,7 +53,7 @@ def get_updates():
 
 
 # Save param changes to db
-@authorized
+@basic_auth.required
 @params.route("/save", methods=["POST"])
 def save():
     try:
@@ -78,6 +80,7 @@ def save():
                 "username": user_info["userName"],
                 "useremail": user_info["userEmail"],
                 "name": p["name"],
+                "prefix": p["prefix"],
                 "value": p["value"],
                 "secret": p["secret"],
                 "comment": p["comment"],
@@ -91,6 +94,7 @@ def save():
         try:
             param = {
                 "name": p["name"],
+                "prefix": p["prefix"],
                 "value": p["value"],
                 "secret": p["secret"],
                 "comment": p["comment"],
@@ -116,26 +120,24 @@ def save():
             err_log.warning(sys.exc_info())
             return "Unable to save updates to database", 500
 
-        try:
+        if Params.query.get((param["name"], param["prefix"])):
+            existing_param = Params.query.get((param["name"], param["prefix"]))
+            existing_param.value = param["value"]
+            existing_param.secret = param["secret"]
+            existing_param.comment = param["comment"]
+            db.session.commit()
+            return "Updated", 202
+        else:
             new_param = Params(**param)
             db.session.add(new_param)
             db.session.commit()
-            app_log.info("Database entry created on table: params")
-        except IntegrityError as e:
-            err_log.warning(e)
-            app_log.warning("Attempting to update existing record instead.")
-            db.session.rollback()
-            db.session.merge(new_param)
-            app_log.info("Updated existing entry on table: params")
-        except:
-            err_log.warning(sys.exc_info())
-            return "Unable to save params to database", 500
+            return "Created", 201
 
     return json.dumps(redacted(updates_list)), 200
 
 
 # save param changes to .json file, add to git and create pr
-@authorized
+@basic_auth.required
 @params.route("/post", methods=["POST"])
 def post():
     params = Params.query.all()
@@ -148,7 +150,7 @@ def post():
 
 
 # Send changes to aws parameter store
-@authorized
+@basic_auth.required
 @params.route("/store", methods=["POST"])
 def store():
 
@@ -156,7 +158,7 @@ def store():
 
 
 # Return differences between test and prod
-@authorized
+@basic_auth.required
 @params.route("/compare", methods=["POST"])
 def compare():
     pass
