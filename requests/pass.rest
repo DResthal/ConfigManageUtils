@@ -26,7 +26,7 @@ content-type: Application/json
 
 
 ###
-# Create a single new parameter
+# Create or update a single new parameter
 POST http://localhost:5000/save HTTP/1.1
 Authorization: Basic dXNlcm5hbWU=:cGFzc3dvcmQ=
 content-type: Application/json
@@ -40,13 +40,13 @@ content-type: Application/json
     "name":"testing",
     "prefix":"sprint100",
     "value":"This is a new, unencrypted value",
-    "secret":false,
+    "secret":true,
     "comment": "Is this updating correctly...?"
   }]
 }
 
 ###
-# Create several new parameters
+# Create or update several new parameters
 POST http://localhost:5000/save HTTP/1.1
 Authorization: Basic dXNlcm5hbWU=:cGFzc3dvcmQ=
 content-type: Application/json
@@ -70,18 +70,6 @@ content-type: Application/json
     "secret":true,
     "comment": "Is this updating correctly...?"
   }]
-}
-
-###
-POST http://localhost:5000/post HTTP/1.1
-Authorization: Basic dXNlcm5hbWU=:cGFzc3dvcmQ=
-content-type: Application/json
-
-{
-  "userInfo": {
-    "userName": "nclack",
-    "userEmail": "testing@gmail.com"
-  }
 }
 
 ###
