@@ -153,22 +153,17 @@ def post():
 @basic_auth.required
 @params.route("/store", methods=["POST"])
 def store():
-
     pass
 
 
-# Return differences between test and prod
+# Copy all parameters from an existing prefix to a new prefix, ignoring those which currently exist
 @basic_auth.required
-@params.route("/compare", methods=["POST"])
-def compare():
+@params.route("/copysprint", methods=["POST"])
+def copysprint():
     pass
 
 
 # This route temporarily exists as a place to test functions
 @params.route("/test", methods=["GET"])
 def test():
-    test = enc("Hello World")
-    print(f"Encrypted string: {test}")
-    string = dec(test)
-    print(f"Decrypted string: {string}")
     return "OK", 200
