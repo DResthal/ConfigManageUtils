@@ -22,6 +22,21 @@ def redacted(data: list) -> list:
     return data
 
 
+def app_log_err(msg: str) -> None:
+    """
+    A custom function to ease the repetitive use of app_log referring to error logs
+
+    Parameters
+    ---------
+    msg : Custom message string to include in the resulting message.
+
+    Returns
+    -------
+    None
+    """
+    app_log.warning(f"{msg}: please refer to error log for more information.")
+
+
 # Get current params from db
 @basic_auth.required
 @params.route("/getparams", methods=["POST"])
@@ -30,9 +45,7 @@ def get():
         params = Params.query.all()
         app_log.info("Parameter query: Success.")
     except:
-        app_log.warning(
-            "Parameter query: Fail, see error log for more details."
-        )
+        app_log_err("Params query failed")
         err_log.warning(sys.exc_info())
         return "Unable to query params", 500
 
@@ -48,7 +61,7 @@ def get_updates():
         updates = Updates.query.all()
         app_log.info("Updates query: Success.")
     except:
-        app_log.warning("Updates query: Fail, see error log for more info.")
+        app_log_err("Updates query failed")
         err_log.warning(sys.exc_info())
         return "Unable to query updates", 500
 
