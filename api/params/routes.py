@@ -5,7 +5,6 @@ import json
 from .models import *
 import sys
 from logging import getLogger
-from sqlalchemy.exc import IntegrityError
 from .functions import enc, dec
 
 
@@ -29,7 +28,11 @@ def redacted(data: list) -> list:
 def get():
     try:
         params = Params.query.all()
+        app_log.info("Parameter query: Success.")
     except:
+        app_log.warning(
+            "Parameter query: Fail, see error log for more details."
+        )
         err_log.warning(sys.exc_info())
         return "Unable to query params", 500
 
@@ -43,7 +46,9 @@ def get():
 def get_updates():
     try:
         updates = Updates.query.all()
+        app_log.info("Updates query: Success.")
     except:
+        app_log.warning("Updates query: Fail, see error log for more info.")
         err_log.warning(sys.exc_info())
         return "Unable to query updates", 500
 
@@ -65,8 +70,17 @@ def save():
     try:
         param_updates = request.json["parameters"]
     except json.JSONDecodeError as e:
+        app_log.warning(
+            "Parameter list did not exist in the request body. See error log for more info."
+        )
         err_log.warning(e)
         return "Inavalide request content", 404
+    except:
+        app_log.warning(
+            "Unable to locate 'parameters' list in request body. An unknown error occurred, please see error log for more details."
+        )
+        err_log.warning(sys.exc_info())
+        return "Unknown exception", 500
 
     updates_list = []
 
@@ -86,8 +100,20 @@ def save():
                 "comment": p["comment"],
             }
         except json.JSONDecodeError as e:
+            app_log.warning(
+                "Unable to create update dictionary, see error log for more details."
+            )
             err_log.warning(e)
-            return "Unable to create update dict, likely missing fields", 404
+            return (
+                "Unable to create update dictionary, likely missing fields",
+                404,
+            )
+        except:
+            app_log.warning(
+                "Unknown error occurred attempting to create the update dictionary, see error log for more details."
+            )
+            err_log.warning(sys.exc_info())
+            return "Unknown exception", 500
 
         updates_list.append(update)
 
@@ -100,16 +126,27 @@ def save():
                 "comment": p["comment"],
             }
         except json.JSONDecodeError as e:
+            app_log.warning(
+                "Unable to create param dictionary, see error log for more details."
+            )
             err_log.warning(e)
             return (
-                """Unable to create parameter dict, likely missing fields. 
-                \nThis error should never exist, if you see this, something has gone terribly wrong!!! 
-                \nPlease contact the administrator and/or developer(s)""",
+                "Unable to create param dictionary, likely missing fields",
                 404,
             )
+        except:
+            app_log.warning(
+                "Unknown error occurred attempting to create the param dictionary, see error log for more details."
+            )
+            err_log.warning(sys.exc_info())
+            return "Unknown exception", 500
 
-        app_log.info(json.dumps(update, sort_keys=True, indent=4))
-        app_log.info(json.dumps(param, sort_keys=True, indent=4))
+        app_log.info(
+            f"Update dictionary created, ready for database insertion. \n {json.dumps(update, sort_keys=True, indent=4)}"
+        )
+        app_log.info(
+            f"Param dictionary created, ready for database insertion. \n {json.dumps(param, sort_keys=True, indent=4)}"
+        )
 
         try:
             new_update = Updates(**update)
@@ -118,20 +155,26 @@ def save():
             app_log.info("Database entry created on table: updates")
         except:
             err_log.warning(sys.exc_info())
-            return "Unable to save updates to database", 500
+            return "Unknown exception", 500
 
-        if Params.query.get((param["name"], param["prefix"])):
-            existing_param = Params.query.get((param["name"], param["prefix"]))
-            existing_param.value = param["value"]
-            existing_param.secret = param["secret"]
-            existing_param.comment = param["comment"]
-            db.session.commit()
-            return "Updated", 202
-        else:
-            new_param = Params(**param)
-            db.session.add(new_param)
-            db.session.commit()
-            return "Created", 201
+        try:
+            if Params.query.get((param["name"], param["prefix"])):
+                existing_param = Params.query.get(
+                    (param["name"], param["prefix"])
+                )
+                existing_param.value = param["value"]
+                existing_param.secret = param["secret"]
+                existing_param.comment = param["comment"]
+                db.session.commit()
+                return "Updated", 202
+            else:
+                new_param = Params(**param)
+                db.session.add(new_param)
+                db.session.commit()
+                return "Created", 201
+        except:
+            err_log.warning(sys.exc_info())
+            return "Unknown exception", 500
 
     return json.dumps(redacted(updates_list)), 200
 
