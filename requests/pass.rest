@@ -57,15 +57,15 @@ content-type: Application/json
     "userEmail": "testing@gmail.com"
   },
   "parameters": [{
-    "name": "app69",
-    "prefix": "sprint100",
+    "name": "app99",
+    "prefix": "sprint1765",
     "value": "this is a NEW value",
     "secret": false,
     "comment": "another dumb comment"
   },
   {
-    "name":"app76",
-    "prefix":"sprint100",
+    "name":"app234",
+    "prefix":"sprint1765",
     "value":"Fallout",
     "secret":true,
     "comment": "Is this updating correctly...?"

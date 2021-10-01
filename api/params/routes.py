@@ -179,12 +179,10 @@ def save():
                 existing_param.secret = param["secret"]
                 existing_param.comment = param["comment"]
                 db.session.commit()
-                return "Updated", 202
             else:
                 new_param = Params(**param)
                 db.session.add(new_param)
                 db.session.commit()
-                return "Created", 201
         except:
             err_log.warning(sys.exc_info())
             return "Unknown exception", 500
