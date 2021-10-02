@@ -136,6 +136,8 @@ git_repo/
 .log
 .vscode/
 
+# Project specific
+*.db
 .env
 params.json
 .aws.config
