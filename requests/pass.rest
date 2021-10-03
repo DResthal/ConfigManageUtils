@@ -1,6 +1,6 @@
 ###
 # Return ALL params stored in params table
-POST http://localhost:5000/getparams HTTP/1.1
+POST http://localhost:8000/getparams HTTP/1.1
 Authorization: Basic dXNlcm5hbWU=:cGFzc3dvcmQ=
 content-type: Application/json
 
@@ -38,16 +38,16 @@ content-type: Application/json
   },
   "parameters": [{
     "name":"testing",
-    "prefix":"sprint100",
+    "prefix":"nonsecret",
     "value":"This is a new, unencrypted value",
-    "secret":true,
+    "secret":false,
     "comment": "Is this updating correctly...?"
   }]
 }
 
 ###
 # Create or update several new parameters
-POST http://localhost:5000/save HTTP/1.1
+POST http://localhost:8000/save HTTP/1.1
 Authorization: Basic dXNlcm5hbWU=:cGFzc3dvcmQ=
 content-type: Application/json
 
@@ -57,19 +57,28 @@ content-type: Application/json
     "userEmail": "testing@gmail.com"
   },
   "parameters": [{
-    "name": "app99",
-    "prefix": "sprint1765",
-    "value": "this is a NEW value",
+    "name": "appasdfasdf",
+    "prefix": "sprint100",
+    "value": "This is a copy of another parameter to create tests",
     "secret": false,
-    "comment": "another dumb comment"
+    "comment": "More Lorem ipsum"
   },
   {
-    "name":"app234",
-    "prefix":"sprint1765",
-    "value":"Fallout",
-    "secret":true,
-    "comment": "Is this updating correctly...?"
+    "name":"applkjhgfds",
+    "prefix":"sprint100",
+    "value":"I don't know, I'm just going to include some sort of data string here....",
+    "secret": true,
+    "comment": "Lorem ipsum"
   }]
+}
+
+###
+POST http://localhost:5000/store HTTP/1.1
+Authorization: Basic dXNlcm5hbWU=:cGFzc3dvcmQ=
+content-type: application/json
+
+{
+  "prefix":"nonsecret"
 }
 
 ###

@@ -7,8 +7,7 @@ def enc(data: str) -> str:
 
     # KMS requires a bytes object, convert to ascii then bytes here
     data = bytes(data.encode("ascii"))
-    bsess = boto3.Session(profile_name="default")
-    kms = bsess.client("kms")
+    kms = boto3.Session(profile_name="default").client("kms")
     res = kms.encrypt(
         KeyId=current_app.config["KMS_KEY_ID"],
         Plaintext=data,
@@ -26,10 +25,39 @@ def dec(data: str) -> str:
     # data starts off as a base64 encoded string, decode this to feed into KMS
     # Again, I don't remember why b64 is necessary, but this is the only way it works.
     data = base64.b64decode(data)
-    bsess = boto3.Session(profile_name="default")
-    kms = bsess.client("kms")
+    kms = boto3.Session(profile_name="default").client("kms")
     r = kms.decrypt(CiphertextBlob=data)
 
     # KMS decrypt returns a bytes string as Plaintext attribute
     # Decode this bytes string to ascii for python.
     return r["Plaintext"].decode("ascii")
+
+
+def store(data: list) -> list:
+    ssm = boto3.Session(
+        profile_name="default", region_name="us-east-1"
+    ).client("ssm")
+    response_list = []
+
+    for param in data:
+        if param["secret"]:
+            res = ssm.put_parameter(
+                Name=param["name"],
+                Value=dec(param["value"]),
+                Description=param["comment"],
+                Type="SecureString",
+                KeyId=current_app.config["KMS_KEY_ID"],
+                Overwrite=True,
+            )
+            response_list.append(res)
+        else:
+            res = ssm.put_parameter(
+                Name=param["name"],
+                Value=param["value"],
+                Description=param["comment"],
+                Type="String",
+                Overwrite=True,
+            )
+            response_list.append(res)
+
+    return response_list

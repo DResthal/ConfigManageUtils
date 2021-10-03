@@ -5,7 +5,7 @@ import json
 from .models import *
 import sys
 from logging import getLogger
-from .functions import enc, dec
+from .functions import enc, dec, store
 
 
 params = Blueprint("params", __name__)
@@ -18,6 +18,15 @@ def redacted(data: list) -> list:
     for i in data:
         if i["secret"]:
             i["value"] = "REDACTED"
+
+    return data
+
+
+def prefix_names(data: list) -> list:
+    for param in data:
+        param["name"] = "/" + param["prefix"] + "/" + param["name"]
+        if param["secret"] == True:
+            param["value"] = dec(param["value"])
 
     return data
 
@@ -194,7 +203,31 @@ def save():
 @basic_auth.required
 @params.route("/store", methods=["POST"])
 def store():
-    pass
+    # 1. Get all parameters based on prefix
+    # 2. Combine prefix and name into /prefix/name
+    # 3. Push dictionary to AWS, try to do this all in one large go
+    # 4. Return
+    try:
+        req_prefix = request.json["prefix"]
+    except json.JSONDecodeError as e:
+        app_log_err("No 'prefix' in request body")
+        err_log.warning(f"no 'prefix' in request body\n {request.json}")
+        return "Bad Request", 400
+
+    try:
+        params = Params.query.filter_by(prefix=req_prefix).all()
+    except:
+        err_log.warning(sys.exc_info())
+        return "Server error", 500
+
+    params_schema = ParamsSchema(many=True)
+
+    # Dump the query into a string, then load it into the schema to create list of objects
+    params = prefix_names(params_schema.loads(params_schema.dumps(params)))
+    res = store(params)
+    print(res)
+
+    return "OK", 200
 
 
 # Copy all parameters from an existing prefix to a new prefix, ignoring those which currently exist
