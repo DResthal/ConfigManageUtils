@@ -13,7 +13,7 @@ def create_app(test_config=None):
         app.config.from_object(test_config)
     else:
         try:
-            app.config.from_pyfile("dev.py")
+            app.config.from_pyfile("config.py")
             print("Loaded custom configuration")
         except:
             pass

@@ -4,46 +4,39 @@ from flask import current_app
 
 
 def enc(data: str) -> str:
-
-    # KMS requires a bytes object, convert to ascii then bytes here
-    data = bytes(data.encode("ascii"))
-    kms = boto3.Session(profile_name="default").client("kms")
+    kms = boto3.client("kms")
     res = kms.encrypt(
         KeyId=current_app.config["KMS_KEY_ID"],
         Plaintext=data,
         EncryptionAlgorithm="SYMMETRIC_DEFAULT",
     )
-
-    # 09/15/2021
-    # KMS returns an object with an attribute named CiphertextBlob, this needs to be encoded
-    # Decode the response to ascii, then encode that response in Base64
-    # I honestly don't remember why, but this is the only way it works.
-    return base64.b64encode(res["CiphertextBlob"]).decode("ascii")
+    enc_data = base64.b64encode(res["CiphertextBlob"])
+    enc_data = enc_data.decode("ascii")
+    return enc_data
 
 
 def dec(data: str) -> str:
-    # data starts off as a base64 encoded string, decode this to feed into KMS
-    # Again, I don't remember why b64 is necessary, but this is the only way it works.
     data = base64.b64decode(data)
-    kms = boto3.Session(profile_name="default").client("kms")
-    r = kms.decrypt(CiphertextBlob=data)
-
-    # KMS decrypt returns a bytes string as Plaintext attribute
-    # Decode this bytes string to ascii for python.
-    return r["Plaintext"].decode("ascii")
+    kms = boto3.client("kms")
+    res = kms.decrypt(CiphertextBlob=data)
+    dec_bytes = res["Plaintext"]
+    return dec_bytes.decode("ascii")
 
 
-def store(data: list) -> list:
-    ssm = boto3.Session(
-        profile_name="default", region_name="us-east-1"
-    ).client("ssm")
+def store_ps(data: list) -> list:
+    ssm = boto3.client("ssm")
+
     response_list = []
 
     for param in data:
+        param.pop("prefix")
         if param["secret"]:
+            print(param["value"])
+            param["value"] = dec(param["value"])
+
             res = ssm.put_parameter(
                 Name=param["name"],
-                Value=dec(param["value"]),
+                Value=param["value"],
                 Description=param["comment"],
                 Type="SecureString",
                 KeyId=current_app.config["KMS_KEY_ID"],

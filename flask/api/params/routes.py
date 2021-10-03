@@ -5,7 +5,7 @@ import json
 from .models import *
 import sys
 from logging import getLogger
-from .functions import enc, dec, store
+from .functions import enc, store_ps
 
 
 params = Blueprint("params", __name__)
@@ -25,9 +25,6 @@ def redacted(data: list) -> list:
 def prefix_names(data: list) -> list:
     for param in data:
         param["name"] = "/" + param["prefix"] + "/" + param["name"]
-        if param["secret"] == True:
-            param["value"] = dec(param["value"])
-
     return data
 
 
@@ -224,10 +221,9 @@ def store():
 
     # Dump the query into a string, then load it into the schema to create list of objects
     params = prefix_names(params_schema.loads(params_schema.dumps(params)))
-    res = store(params)
-    print(res)
+    res = store_ps(params)
 
-    return "OK", 200
+    return json.dumps(res), 200
 
 
 # Copy all parameters from an existing prefix to a new prefix, ignoring those which currently exist
