@@ -1,6 +1,6 @@
 ###
 # Return ALL params stored in params table
-POST http://localhost:8000/getparams HTTP/1.1
+POST http://localhost:5000/getparams HTTP/1.1
 Authorization: Basic dXNlcm5hbWU=:cGFzc3dvcmQ=
 content-type: Application/json
 
@@ -47,7 +47,7 @@ content-type: Application/json
 
 ###
 # Create or update several new parameters
-POST http://localhost:8000/save HTTP/1.1
+POST http://localhost:5000/save HTTP/1.1
 Authorization: Basic dXNlcm5hbWU=:cGFzc3dvcmQ=
 content-type: Application/json
 
@@ -57,15 +57,15 @@ content-type: Application/json
     "userEmail": "testing@gmail.com"
   },
   "parameters": [{
-    "name": "appasdfasdf",
-    "prefix": "sprint100",
+    "name": "09876543",
+    "prefix": "sprint101",
     "value": "This is a copy of another parameter to create tests",
     "secret": false,
     "comment": "More Lorem ipsum"
   },
   {
-    "name":"applkjhgfds",
-    "prefix":"sprint100",
+    "name":"1234567890",
+    "prefix":"sprint101",
     "value":"I don't know, I'm just going to include some sort of data string here....",
     "secret": true,
     "comment": "Lorem ipsum"
@@ -78,7 +78,7 @@ Authorization: Basic dXNlcm5hbWU=:cGFzc3dvcmQ=
 content-type: application/json
 
 {
-  "prefix":"nonsecret"
+  "prefix":"sprint101"
 }
 
 ###

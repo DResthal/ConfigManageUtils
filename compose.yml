@@ -1,4 +1,4 @@
-version: '3.9'
+version: '3.7'
 services:
   db:
     container_name: configmanagerdb
@@ -6,16 +6,6 @@ services:
     restart: always
     env_file:
       - postgres.env
-    expose:
-      - "5432"
-  api:
-    container_name: configmanagerapi
-    restart: always
-    build: ./flask
-    env_file:
-      - ./flask/prod.env
     ports:
-      - 8000:8000
-    depends_on:
-      - "db"
-    command: gunicorn -w 2 --bind 0.0.0.0:8000 "api:create_app()"
+      - 5432:5432
+  
