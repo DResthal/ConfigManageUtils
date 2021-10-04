@@ -7,7 +7,6 @@ from flask_basicauth import BasicAuth
 
 
 e_log = getLogger("elog")
-a_log = getLogger("alog")
 
 db = SQLAlchemy()
 ma = Marshmallow()
