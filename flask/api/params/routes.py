@@ -10,23 +10,7 @@ from .functions import enc, store_ps, redacted, prefix_names
 
 params = Blueprint("params", __name__)
 err_log = getLogger("elog")
-app_log = getLogger("alog")
 basic_auth.init_app(current_app)
-
-
-def app_log_err(msg: str) -> None:
-    """
-    A custom function to ease the repetitive use of app_log referring to error logs
-
-    Parameters
-    ---------
-    msg : Custom message string to include in the resulting message.
-
-    Returns
-    -------
-    None
-    """
-    app_log.warning(f"{msg}: please refer to error log for more information.")
 
 
 # Get current params from db
@@ -35,9 +19,7 @@ def app_log_err(msg: str) -> None:
 def get():
     try:
         params = Params.query.all()
-        app_log.info("Parameter query: Success.")
     except:
-        app_log_err("Params query failed")
         err_log.warning(sys.exc_info())
         return "Unable to query params", 500
 
@@ -51,9 +33,7 @@ def get():
 def get_updates():
     try:
         updates = Updates.query.all()
-        app_log.info("Updates query: Success.")
     except:
-        app_log_err("Updates query failed")
         err_log.warning(sys.exc_info())
         return "Unable to query updates", 500
 
@@ -75,15 +55,9 @@ def save():
     try:
         param_updates = request.json["parameters"]
     except json.JSONDecodeError as e:
-        app_log.warning(
-            "Parameter list did not exist in the request body. See error log for more info."
-        )
         err_log.warning(e)
         return "Inavalide request content", 404
     except:
-        app_log.warning(
-            "Unable to locate 'parameters' list in request body. An unknown error occurred, please see error log for more details."
-        )
         err_log.warning(sys.exc_info())
         return "Unknown exception", 500
 
@@ -105,18 +79,12 @@ def save():
                 "comment": p["comment"],
             }
         except json.JSONDecodeError as e:
-            app_log.warning(
-                "Unable to create update dictionary, see error log for more details."
-            )
             err_log.warning(e)
             return (
                 "Unable to create update dictionary, likely missing fields",
                 404,
             )
         except:
-            app_log.warning(
-                "Unknown error occurred attempting to create the update dictionary, see error log for more details."
-            )
             err_log.warning(sys.exc_info())
             return "Unknown exception", 500
 
@@ -131,33 +99,19 @@ def save():
                 "comment": p["comment"],
             }
         except json.JSONDecodeError as e:
-            app_log.warning(
-                "Unable to create param dictionary, see error log for more details."
-            )
             err_log.warning(e)
             return (
                 "Unable to create param dictionary, likely missing fields",
                 404,
             )
         except:
-            app_log.warning(
-                "Unknown error occurred attempting to create the param dictionary, see error log for more details."
-            )
             err_log.warning(sys.exc_info())
             return "Unknown exception", 500
-
-        app_log.info(
-            f"Update dictionary created, ready for database insertion. \n {json.dumps(update, sort_keys=True, indent=4)}"
-        )
-        app_log.info(
-            f"Param dictionary created, ready for database insertion. \n {json.dumps(param, sort_keys=True, indent=4)}"
-        )
 
         try:
             new_update = Updates(**update)
             db.session.add(new_update)
             db.session.commit()
-            app_log.info("Database entry created on table: updates")
         except:
             err_log.warning(sys.exc_info())
             return "Unknown exception", 500
@@ -193,7 +147,6 @@ def store():
     try:
         req_prefix = request.json["prefix"]
     except json.JSONDecodeError as e:
-        app_log_err("No 'prefix' in request body")
         err_log.warning(f"no 'prefix' in request body\n {request.json}")
         return "Bad Request", 400
 
