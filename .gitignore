@@ -144,3 +144,4 @@ params.json
 .db
 config.py
 logs/
+flask/prod.env
