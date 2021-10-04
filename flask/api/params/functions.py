@@ -3,6 +3,26 @@ import base64
 from flask import current_app
 
 
+def redacted(data: list) -> list:
+    for i in data:
+        if i["secret"]:
+            i["value"] = "REDACTED"
+
+    return data
+
+
+def prefix_names(data: list) -> list:
+    """
+    Combine the prefix and the name of a each dictionary in a list
+
+    Parameters
+    ----------
+    """
+    for param in data:
+        param["name"] = "/" + param["prefix"] + "/" + param["name"]
+    return data
+
+
 def enc(data: str) -> str:
     kms = boto3.client("kms")
     res = kms.encrypt(

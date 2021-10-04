@@ -5,27 +5,13 @@ import json
 from .models import *
 import sys
 from logging import getLogger
-from .functions import enc, store_ps
+from .functions import enc, store_ps, redacted, prefix_names
 
 
 params = Blueprint("params", __name__)
 err_log = getLogger("elog")
 app_log = getLogger("alog")
 basic_auth.init_app(current_app)
-
-
-def redacted(data: list) -> list:
-    for i in data:
-        if i["secret"]:
-            i["value"] = "REDACTED"
-
-    return data
-
-
-def prefix_names(data: list) -> list:
-    for param in data:
-        param["name"] = "/" + param["prefix"] + "/" + param["name"]
-    return data
 
 
 def app_log_err(msg: str) -> None:
