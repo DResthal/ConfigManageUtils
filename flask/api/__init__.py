@@ -14,7 +14,6 @@ def create_app(test_config=None):
     else:
         try:
             app.config.from_pyfile("config.py")
-            print("Loaded custom configuration")
         except:
             pass
 
@@ -34,15 +33,6 @@ def create_app(test_config=None):
     error_formatter = """%(asctime)s %(levelname)s: %(filename)s %(lineno)d
         %(message)s"""
 
-    application_formatter = """%(asctime)s %(levelname)s: %(message)s"""
-
-    app_log = CustomLogger(
-        name="alog",
-        log_file=os.path.join(log_dir, "application.log"),
-        level=logging.INFO,
-        formatter=logging.Formatter(application_formatter),
-    ).create_logger()
-
     err_log = CustomLogger(
         name="elog",
         log_file=os.path.join(log_dir, "error.log"),
@@ -55,8 +45,6 @@ def create_app(test_config=None):
         from .extensions import db, ma
         from .params.routes import params
 
-        app_log.info("Application started")
-
         app.register_blueprint(params)
         migrate = Migrate(app, db)
         db.init_app(app)
@@ -64,11 +52,8 @@ def create_app(test_config=None):
 
         @app.route("/sanitycheck", methods=["GET"])
         def test():
-            app_log.info(
-                "Sanity check route accessed. Application is running! If you see this, the application log is working correctly."
-            )
             err_log.warning(
-                "Sanity check route accessed. Application is running! If you see this, the error log is working correctly."
+                "Sanity check route accessed. Application is running! If you see this, the application and error log is working correctly."
             )
             return "Working", 200
 
