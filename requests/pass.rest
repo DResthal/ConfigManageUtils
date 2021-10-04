@@ -1,6 +1,6 @@
 ###
 # Return ALL params stored in params table
-POST http://localhost:5000/getparams HTTP/1.1
+POST http://localhost:8000/getparams HTTP/1.1
 Authorization: Basic dXNlcm5hbWU=:cGFzc3dvcmQ=
 content-type: Application/json
 
@@ -13,7 +13,7 @@ content-type: Application/json
 
 ###
 # Return ALL updates
-POST http://localhost:5000/getupdates HTTP/1.1
+POST http://localhost:8000/getupdates HTTP/1.1
 Authorization: Basic dXNlcm5hbWU=:cGFzc3dvcmQ=
 content-type: Application/json
 
@@ -27,7 +27,7 @@ content-type: Application/json
 
 ###
 # Create or update a single new parameter
-POST http://localhost:5000/save HTTP/1.1
+POST http://localhost:8000/save HTTP/1.1
 Authorization: Basic dXNlcm5hbWU=:cGFzc3dvcmQ=
 content-type: Application/json
 
