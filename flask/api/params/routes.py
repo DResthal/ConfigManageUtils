@@ -1,6 +1,7 @@
 from flask import Blueprint, request
 from flask import current_app
 from api.extensions import db, basic_auth
+from sqlalchemy.dialects.postgresql import insert
 import json
 from .models import *
 import sys
@@ -133,17 +134,13 @@ def save():
             err_log.warning(sys.exc_info())
             return "Unknown exception", 500
 
-    return json.dumps(redacted(updates_list)), 200
+    return json.dumps(redacted(updates_list)), 201
 
 
 # Send changes to aws parameter store
 @basic_auth.required
 @params.route("/store", methods=["POST"])
 def store():
-    # 1. Get all parameters based on prefix
-    # 2. Combine prefix and name into /prefix/name
-    # 3. Push dictionary to AWS, try to do this all in one large go
-    # 4. Return
     try:
         req_prefix = request.json["prefix"]
     except json.JSONDecodeError as e:
@@ -167,9 +164,31 @@ def store():
 
 # Copy all parameters from an existing prefix to a new prefix, ignoring those which currently exist
 @basic_auth.required
-@params.route("/copysprint", methods=["POST"])
+@params.route("/copyprefix", methods=["POST"])
 def copysprint():
-    pass
+    original = request.json["originalPrefix"]
+    target = request.json["targetPrefix"]
+
+    params = Params.query.filter_by(prefix=original)
+    params_schema = ParamsSchema(many=True)
+    params_list = params_schema.loads(params_schema.dumps(params))
+
+    # Change the prefix to the new prefix
+    for param in params_list:
+        param["prefix"] = target
+        # Try to insert using the new prefix
+        try:
+            if Params.query.get((param["name"], param["prefix"])):
+                pass
+            else:
+                new_param = Params(**param)
+                db.session.add(new_param)
+                db.session.commit()
+        except:
+            err_log.warning(sys.exc_info())
+            return "Unknown exception", 500
+
+    return "Created", 201
 
 
 # This route temporarily exists as a place to test functions
