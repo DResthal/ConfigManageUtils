@@ -13,6 +13,7 @@ setup(
         "flask-sqlalchemy",
         "flask-migrate",
         "flask-marshmallow",
+        "sqlalchemy",
         "marshmallow-sqlalchemy",
         "boto3",
         "psycopg2-binary",
