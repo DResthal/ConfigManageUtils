@@ -1,7 +1,6 @@
 from flask import Blueprint, request
 from flask import current_app
 from api.extensions import db, basic_auth
-from sqlalchemy.dialects.postgresql import insert
 import json
 from .models import *
 import sys
