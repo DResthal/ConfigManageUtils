@@ -35,3 +35,7 @@ class UpdatesSchema(SQLAlchemyAutoSchema):
 class ParamsSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = Params
+
+
+def init_db():
+    db.create_all()

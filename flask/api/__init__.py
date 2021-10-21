@@ -44,11 +44,13 @@ def create_app(test_config=None):
     with app.app_context():
         from .extensions import db, ma
         from .params.routes import params
+        from .params.models import init_db
 
         app.register_blueprint(params)
         migrate = Migrate(app, db)
         db.init_app(app)
         ma = ma.init_app(app)
+        init_db()
 
         @app.route("/sanitycheck", methods=["GET"])
         def test():
