@@ -1,58 +1,66 @@
 import boto3
 import base64
 from flask import current_app
+from logging import getLogger
 import sys
 
 
-def get_client(env: str = None, client: str = None):
+err_log = getLogger("elog")
+
+
+def get_credentials(env: str = None):
     """
-    Creates a Boto3 resource as a replacement to a normal low-level client, using the assumed credentials of the provided environment parameter
+    Get the Assumed Role credentials of the role being assumed, setup in config.py
 
     Parameters
     ----------
-    env: Environment representing the ARN to use
-    client: The Boto3 resource to create. i.e. kms
+    env: str: The environment variable of the AWS credentials
 
     Response
     --------
-    Boto3 resource using the assumed credentials
+    Returns a dictionary containing the assumed role's AWS credentials
     """
     try:
         sts_client = boto3.client("sts")
     except:
-        raise
+        err_log.warning("Unable to create sts client.")
+        err_log.warning(sys.exc_info())
+        return "Error creating sts client, see logs for more details", 500
 
     if env.lower() == "dev":
         role_arn = current_app.config["DEV_ARN"]
         role_session_name = "DevSession"
+        kms_key = current_app.config["DEV_KMS_KEY"]
 
     if env.lower() == "prod":
         role_arn = current_app.config["PRD_ARN"]
         role_session_name = "ProdSession"
+        kms_key = current_app.config["PRD_KMS_KEY"]
 
     try:
         assumed_role = sts_client.assume_role(
             RoleArn=role_arn, RoleSessionName=role_session_name
         )
     except:
-        raise
+        err_log.warning(
+            "Unable to assume role and receive role object containing credentials"
+        )
+        err_log.warning(sys.exc_info())
+        return "Unalbe to assume role. See logs for more details", 500
 
     try:
         credentials = assumed_role["Credentials"]
     except KeyError:
-        raise
-
-    try:
-        resource = boto3.resource(
-            client,
-            aws_access_key_id=credentials["AccessKeyId"],
-            aws_secret_access_key=credentials["SecretAccessKey"],
-            aws_session_token=credentials["SessionToken"],
+        err_log.warning(
+            "assumed_role does not contain key Credentials, something else has gone horribly wrong."
         )
-    except:
-        raise
+        err_log.warning(sys.exc_info())
+        return (
+            "Unable to extract credentials from the assumed_role object. See logs for more details",
+            500,
+        )
 
-    return resource
+    return credentials, kms_key
 
 
 def redacted(data: list) -> list:
@@ -99,10 +107,23 @@ def enc(data: str, env: str = None) -> str:
     --------
     Encrypted string
     """
+    credentials, kms_key = get_credentials(env.lower())
+
     try:
-        kms = get_client(env, "kms")
+        kms = boto3.client(
+            "kms",
+            aws_access_key_id=credentials["AccessKeyId"],
+            aws_secret_access_key=credentials["SecretAccessKey"],
+            aws_session_token=credentials["SessionToken"],
+        )
+    except:
+        err_log.warning("Unable to create client 'kms'")
+        err_log.warning(sys.exc_info())
+        return "Unable to create KMS client. See logs for more details", 500
+
+    try:
         res = kms.encrypt(
-            KeyId=current_app.config["KMS_KEY_ID"],
+            KeyId=kms_key,
             Plaintext=data,
             EncryptionAlgorithm="SYMMETRIC_DEFAULT",
         )
@@ -113,13 +134,14 @@ def enc(data: str, env: str = None) -> str:
         return f"AWS/Boto3 error in enc() {sys.exc_info()}", 500
 
 
-def dec(data: str) -> str:
+def dec(data: str, env: str = None) -> str:
     """
     Decrypts an encrypted string with AWS KMS
 
     Parameters
     ----------
-    data: String to decrypt: Ensure this is an encrypted string and not a raw string or encoding will break.
+    data: The encrypted string to decrypt
+    env: Which AWS role to assume
 
     Response
     --------
@@ -130,30 +152,51 @@ def dec(data: str) -> str:
     except:
         raise
 
-    kms = boto3.client("kms")
-    res = kms.decrypt(
-        CiphertextBlob=data, KeyId=current_app.config["KMS_KEY_ID"]
-    )
+    credentials, kms_key = get_credentials(env.lower())
+
+    try:
+        kms = boto3.client(
+            "kms",
+            aws_access_key_id=credentials["AccessKeyId"],
+            aws_secret_access_key=credentials["SecretAccessKey"],
+            aws_session_token=credentials["SessionToken"],
+        )
+    except:
+        err_log.warning("Unable to create client 'kms'")
+        err_log.warning(sys.exc_info())
+        return "Unable to create KMS client. See logs for more details", 500
+
+    res = kms.decrypt(CiphertextBlob=data, KeyId=kms_key)
     dec_bytes = res["Plaintext"]
     return dec_bytes.decode("ascii")
 
 
-def store_ps(data: list) -> list:
+def store_ps(data: list, env: str = None) -> list:
     """
     Stores data in AWS Parameter store under SSM
 
     Parameters
     ----------
     data: List of dictionaries representing parameters to store
+    env: Which AWS role to assume
 
     Response
     --------
     List of AWS SSM responses as dictionaries for each parameter stores.
     """
+    credentials, _ = get_credentials(env.lower())
+
     try:
-        ssm = boto3.client("ssm")
+        ssm = boto3.client(
+            "ssm",
+            aws_access_key_id=credentials["AccessKeyId"],
+            aws_secret_access_key=credentials["SecretAccessKey"],
+            aws_session_token=credentials["SessionToken"],
+        )
     except:
-        return "Unable to create client 'ssm'", 500
+        err_log.warning("Unable to create client 'ssm'")
+        err_log.warning(sys.exc_info())
+        return "Unable to create SSM client. See logs for more details", 500
 
     response_list = []
 
