@@ -1,6 +1,23 @@
 import boto3
 import base64
 from flask import current_app
+import sys
+
+
+def get_client(env: str=None, client: str=None):
+    """
+    Creates a Boto3 resource as a replacement to a normal low-level client, using the assumed credentials of the provided environment parameter
+
+    Parameters
+    ----------
+    env: Environment representing the ARN to use
+    client: The Boto3 resource to create. i.e. kms
+
+    Response
+    --------
+    Boto3 resource using the assumed credentials
+    """
+    pass
 
 
 def redacted(data: list) -> list:
@@ -44,17 +61,20 @@ def enc(data: str) -> str:
 
     Response
     --------
-    String
+    Encrypted string
     """
-    kms = boto3.client("kms")
-    res = kms.encrypt(
-        KeyId=current_app.config["KMS_KEY_ID"],
-        Plaintext=data,
-        EncryptionAlgorithm="SYMMETRIC_DEFAULT",
-    )
-    enc_data = base64.b64encode(res["CiphertextBlob"])
-    enc_data = enc_data.decode("ascii")
-    return enc_data
+    try:
+        kms = boto3.client("kms")
+        res = kms.encrypt(
+            KeyId=current_app.config["KMS_KEY_ID"],
+            Plaintext=data,
+            EncryptionAlgorithm="SYMMETRIC_DEFAULT",
+        )
+        enc_data = base64.b64encode(res["CiphertextBlob"])
+        enc_data = enc_data.decode("ascii")
+        return enc_data
+    except:
+        return f"AWS/Boto3 error in enc() {sys.exc_info()}", 500
 
 
 def dec(data: str) -> str:
@@ -67,11 +87,15 @@ def dec(data: str) -> str:
 
     Response
     --------
-    String
+    Decrypted string
     """
-    data = base64.b64decode(data)
+    try:
+        data = base64.b64decode(data)
+    except:
+        raise
+
     kms = boto3.client("kms")
-    res = kms.decrypt(CiphertextBlob=data)
+    res = kms.decrypt(CiphertextBlob=data, KeyId=current_app.config["KMS_KEY_ID"])
     dec_bytes = res["Plaintext"]
     return dec_bytes.decode("ascii")
 
@@ -88,33 +112,37 @@ def store_ps(data: list) -> list:
     --------
     List of AWS SSM responses as dictionaries for each parameter stores.
     """
-    ssm = boto3.client("ssm")
+    try:
+        ssm = boto3.client("ssm")
+    except:
+        return "Unable to create client 'ssm'", 500
 
     response_list = []
 
     for param in data:
-        param.pop("prefix")
-        if param["secret"]:
-            print(param["value"])
-            param["value"] = dec(param["value"])
-
-            res = ssm.put_parameter(
-                Name=param["name"],
-                Value=param["value"],
-                Description=param["comment"],
-                Type="SecureString",
-                KeyId=current_app.config["KMS_KEY_ID"],
-                Overwrite=True,
-            )
-            response_list.append(res)
-        else:
-            res = ssm.put_parameter(
-                Name=param["name"],
-                Value=param["value"],
-                Description=param["comment"],
-                Type="String",
-                Overwrite=True,
-            )
-            response_list.append(res)
+        try:
+            param.pop("prefix")
+            if param["secret"]:
+                param["value"] = dec(param["value"])
+                res = ssm.put_parameter(
+                    Name=param["name"],
+                    Value=param["value"],
+                    Description=param["comment"],
+                    Type="SecureString",
+                    KeyId=current_app.config["KMS_KEY_ID"],
+                    Overwrite=True,
+                )
+                response_list.append(res)
+            else:
+                res = ssm.put_parameter(
+                    Name=param["name"],
+                    Value=param["value"],
+                    Description=param["comment"],
+                    Type="String",
+                    Overwrite=True,
+                )
+                response_list.append(res)
+        except:
+            response_list.append(f"Error in {param['name']}")
 
     return response_list
