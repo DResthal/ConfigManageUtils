@@ -66,7 +66,7 @@ def save():
     for p in param_updates:
 
         if p["secret"]:
-            p["value"] = enc(p["value"])
+            p["value"] = enc(p["value"], request.json["env"])
 
         try:
             update = {

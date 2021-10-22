@@ -4,7 +4,7 @@ from flask import current_app
 import sys
 
 
-def get_client(env: str=None, client: str=None):
+def get_client(env: str = None, client: str = None):
     """
     Creates a Boto3 resource as a replacement to a normal low-level client, using the assumed credentials of the provided environment parameter
 
@@ -17,7 +17,42 @@ def get_client(env: str=None, client: str=None):
     --------
     Boto3 resource using the assumed credentials
     """
-    pass
+    try:
+        sts_client = boto3.client("sts")
+    except:
+        raise
+
+    if env.lower() == "dev":
+        role_arn = current_app.config["DEV_ARN"]
+        role_session_name = "DevSession"
+
+    if env.lower() == "prod":
+        role_arn = current_app.config["PRD_ARN"]
+        role_session_name = "ProdSession"
+
+    try:
+        assumed_role = sts_client.assume_role(
+            RoleArn=role_arn, RoleSessionName=role_session_name
+        )
+    except:
+        raise
+
+    try:
+        credentials = assumed_role["Credentials"]
+    except KeyError:
+        raise
+
+    try:
+        resource = boto3.resource(
+            client,
+            aws_access_key_id=credentials["AccessKeyId"],
+            aws_secret_access_key=credentials["SecretAccessKey"],
+            aws_session_token=credentials["SessionToken"],
+        )
+    except:
+        raise
+
+    return resource
 
 
 def redacted(data: list) -> list:
@@ -51,20 +86,21 @@ def prefix_names(data: list) -> list:
     return data
 
 
-def enc(data: str) -> str:
+def enc(data: str, env: str = None) -> str:
     """
     Encrypts the given string data with AWS KMS
 
     Parameters
     ----------
     data: String to encrypt
+    env: Which AWS role to assume
 
     Response
     --------
     Encrypted string
     """
     try:
-        kms = boto3.client("kms")
+        kms = get_client(env, "kms")
         res = kms.encrypt(
             KeyId=current_app.config["KMS_KEY_ID"],
             Plaintext=data,
@@ -95,7 +131,9 @@ def dec(data: str) -> str:
         raise
 
     kms = boto3.client("kms")
-    res = kms.decrypt(CiphertextBlob=data, KeyId=current_app.config["KMS_KEY_ID"])
+    res = kms.decrypt(
+        CiphertextBlob=data, KeyId=current_app.config["KMS_KEY_ID"]
+    )
     dec_bytes = res["Plaintext"]
     return dec_bytes.decode("ascii")
 
