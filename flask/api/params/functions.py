@@ -131,7 +131,8 @@ def enc(data: str, env: str = None) -> str:
         enc_data = enc_data.decode("ascii")
         return enc_data
     except:
-        return f"AWS/Boto3 error in enc() {sys.exc_info()}", 500
+        err_log.warning(f"Error in enc(). \n {sys.exc_info()}")
+        return "An encrypted error occurred, refer to logs."
 
 
 def dec(data: str, env: str = None) -> str:
@@ -204,7 +205,7 @@ def store_ps(data: list, env: str = None) -> list:
         try:
             param.pop("prefix")
             if param["secret"]:
-                param["value"] = dec(param["value"])
+                param["value"] = dec(param["value"], env)
                 res = ssm.put_parameter(
                     Name=param["name"],
                     Value=param["value"],
@@ -224,6 +225,7 @@ def store_ps(data: list, env: str = None) -> list:
                 )
                 response_list.append(res)
         except:
+            err_log.warning(sys.exc_info())
             response_list.append(f"Error in {param['name']}")
 
     return response_list

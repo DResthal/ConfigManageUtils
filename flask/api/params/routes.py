@@ -141,6 +141,11 @@ def save():
 @params.route("/store", methods=["POST"])
 def store():
     try:
+        env = request.json["env"].lower()
+    except:
+        return "No env found in request json", 404
+
+    try:
         req_prefix = request.json["prefix"]
     except json.JSONDecodeError as e:
         err_log.warning(f"no 'prefix' in request body\n {request.json}")
@@ -156,7 +161,7 @@ def store():
 
     # Dump the query into a string, then load it into the schema to create list of objects
     params = prefix_names(params_schema.loads(params_schema.dumps(params)))
-    res = store_ps(params)
+    res = store_ps(params, request.json["env"])
 
     return json.dumps(res), 200
 
